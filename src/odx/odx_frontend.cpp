@@ -49,6 +49,8 @@ bool want_exit = false, first_run = true;
 
 char romdir[512];
 
+signed int get_romdir(char *result) ;
+
 static void blit_bmp_8bpp(unsigned char *out, unsigned char *in) 
 {
 //	SDL_FillRect( layer, NULL, 0 );
@@ -95,11 +97,8 @@ static void game_list_init_nocache(void)
 	int i;
 	FILE *f;
 	
-	if (strlen(romdir))
-		strcpy(text,romdir);
-	else
-		sprintf(text,"%s/roms",mamedir);
-	
+	snprintf(text, sizeof(text), "%s", romdir);
+
 	DIR *d=opendir(text);
 	char game[32];
 	if (d)
@@ -185,7 +184,7 @@ static void game_list_view(int *pos) {
 
 	/* draw text */
 	odx_gamelist_text_out( 4, 60,"Select ROM");
-	odx_gamelist_text_out( 4, Y_BOTTOM_LINE,"A=Select Game/Start  B=Back");
+	odx_gamelist_text_out( 4, Y_BOTTOM_LINE,"A=Select Game/Start  B=Select Rom folder");
 	odx_gamelist_text_out( 268, Y_BOTTOM_LINE,"L+R=Exit");
 	odx_gamelist_text_out( X_BUILD,2,frontend_build_version);
 
@@ -346,7 +345,7 @@ static int show_options(char *game)
 		switch(odx_sound)
 		{
 			case 0: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Sound          %s","OFF"); break;
-			case 1: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Sound          %s","ON (15 KHz fast)"); break;
+			case 1: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Sound          %s","ON (11 KHz fast)"); break;
 			case 2: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Sound          %s","ON (22 KHz fast)"); break;
 			case 3: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Sound          %s","ON (33 KHz fast)"); break;
 			case 4: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Sound          %s","ON (44 KHz fast)"); break;
@@ -532,10 +531,26 @@ static int show_options(char *game)
 
 static void odx_exit(char *param)
 {
+	FILE* filesave;
 	char text[512];
 	
-	sprintf(text,"%s/frontend/mame.lst",mamedir);
+	snprintf(text, sizeof(text), "%s/frontend/mame.lst",mamedir);
 	remove(text);
+	
+	snprintf(text, sizeof(text), "%s/cfg/romsave.txt", mamedir); 
+	
+	if (game_num_avail > 0)
+	{
+		printf("\nSaving rom directory %s to %s\n", romdir, text);
+		
+		filesave = fopen(text, "w+");
+		if (filesave)
+		{
+			fprintf(filesave, romdir);
+			fclose(filesave);
+		}
+	}
+	
 	//sync();
 	//odx_deinit();
 }
@@ -558,18 +573,19 @@ void odx_save_config(void) {
 	FILE *f;
 
 	/* Write default configuration */
-	sprintf(curCfg,"%s/frontend/mame.cfg",mamedir);
+	snprintf(curCfg, sizeof(curCfg), "%s/frontend/mame.cfg",mamedir);
 	f=fopen(curCfg,"w");
 	if (f) {
 		fprintf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s",odx_freq,odx_video_depth,odx_video_aspect,odx_video_sync,
 		odx_frameskip,odx_sound,odx_clock_cpu,odx_clock_sound,odx_cpu_cores,odx_ramtweaks,last_game_selected,odx_cheat,romdir);
 		fclose(f);
-		/* sync(); */
+		//fsync(f);
 	}
 }
 
 static void select_game(char *emu, char *game)
 {
+	int i;
 	unsigned long ExKey;
 
 	/* No Selected game */
@@ -597,8 +613,8 @@ static void select_game(char *emu, char *game)
 			}
 		if (ExKey & OD_UP) last_game_selected--;
 		if (ExKey & OD_DOWN) last_game_selected++;
-		if (ExKey & OD_LEFT) last_game_selected-=22; // ALEK 21
-		if (ExKey & OD_RIGHT) last_game_selected+=22; // ALEK 21
+		if (ExKey & OD_RIGHT) last_game_selected-=22; // ALEK 21
+		if (ExKey & OD_LEFT) last_game_selected+=22; // ALEK 21
 
 		if ((ExKey & OD_A) || (ExKey & OD_START) )
 		{
@@ -611,6 +627,19 @@ static void select_game(char *emu, char *game)
 				break;
 			}
 		}
+		
+		/* Get rom directory and reset list after that */
+		if ((ExKey & OD_B) )
+		{
+			get_romdir(romdir);
+			game_num_avail = 0;
+			for (i=0;i<NUMGAMES;i++)
+				frontend_drivers[i].available = 0;
+			game_list_init(1);
+			last_game_selected = 0;
+			odx_video_flip();
+		}
+		
 	}
 }
 
@@ -748,7 +777,7 @@ void execute_game (char *playemu, char *playgame)
 	if ((odx_sound==1) || (odx_sound==6) || (odx_sound==11))
 	{
 		mame_args[margc]="-samplerate"; margc++;
-		mame_args[margc]="15000"; margc++;
+		mame_args[margc]="11025"; margc++;
 	}
 	if ((odx_sound==2) || (odx_sound==7) || (odx_sound==12))
 	{
@@ -871,7 +900,9 @@ int sort_function(const void *src_str_ptr, const void *dest_str_ptr) {
   return strcmp (p1->name, p2->name);
 }
 
-signed int get_romdir(char *result) {
+
+signed int get_romdir(char *result) 
+{
 	unsigned long ExKey;
 	
 	char current_dir_name[512];
@@ -893,7 +924,7 @@ signed int get_romdir(char *result) {
 	unsigned int current_filedir_number;
 	
 	// Init dir with saved one
-	strcpy(current_dir_name,mamedir);
+	//strcpy(current_dir_name,mamedir);
 
 	while (return_value == 1) {
 		current_filedir_in_scroll = 0;
@@ -1030,35 +1061,45 @@ signed int get_romdir(char *result) {
 	return return_value;
 }
 
-void gethomedir(char *dir, char* name) {
+void gethomedir() {
 	char text[512];
-#ifdef _GCW0_
-	strcpy(dir, getenv("HOME"));
-	if (strlen(dir) == 0) {
-		getcwd(dir, 256);
+	FILE *filesave, *ftest;
+	
+	snprintf(mamedir, sizeof(mamedir), "%s/.mame4all", getenv("HOME"));
+	mkdir(mamedir,0755); // create $HOME/.program if it doesn't exist
+	snprintf(text, sizeof(text), "%s/frontend/",mamedir); 
+	mkdir(text,0755); 
+	snprintf(text, sizeof(text), "%s/nvram/",mamedir); 
+	mkdir(text,0755); 
+	snprintf(text, sizeof(text), "%s/hi/",mamedir); 
+	mkdir(text,0755); 
+	snprintf(text, sizeof(text), "%s/cfg/",mamedir); 
+	mkdir(text,0755); 
+	snprintf(text, sizeof(text), "%s/memcard/",mamedir);
+	mkdir(text,0755); 
+	snprintf(text, sizeof(text), "%s/snap/",mamedir); 
+	mkdir(text,0755); 
+	
+	snprintf(text, sizeof(text), "%s/cfg/romsave.txt",mamedir); 
+	
+	filesave = fopen(text, "r+");
+	if (filesave)
+	{
+		fread(romdir, 512, 1, filesave);
+		fclose(filesave);
 	}
-#else
-	getcwd(dir, 256);
-#endif
-	if (strlen(name)) {
-		sprintf(dir,"%s/.%s/",dir, name);
-#ifdef _GCW0_
-		mkdir(dir,S_IRWXU | S_IRWXG | S_IRWXO); // create $HOME/.program if it doesn't exist
-		sprintf(text,"%s/frontend/",dir); mkdir(text,S_IRWXU | S_IRWXG | S_IRWXO); 
-		sprintf(text,"%s/nvram/",dir); mkdir(text,S_IRWXU | S_IRWXG | S_IRWXO); 
-		sprintf(text,"%s/hi/",dir); mkdir(text,S_IRWXU | S_IRWXG | S_IRWXO); 
-		sprintf(text,"%s/cfg/",dir); mkdir(text,S_IRWXU | S_IRWXG | S_IRWXO); 
-		sprintf(text,"%s/memcard/",dir); mkdir(text,S_IRWXU | S_IRWXG | S_IRWXO); 
-		sprintf(text,"%s/snap/",dir); mkdir(text,S_IRWXU | S_IRWXG | S_IRWXO); 
-#else
-		mkdir(dir); // create /.program if it doesn't exist
-		sprintf(text,"%s/frontend/",dir); mkdir(text); 
-		sprintf(text,"%s/nvram/",dir); mkdir(text); 
-		sprintf(text,"%s/hi/",dir);	mkdir(text); 
-		sprintf(text,"%s/cfg/",dir); mkdir(text); 
-		sprintf(text,"%s/memcard/",dir); mkdir(text); 
-		sprintf(text,"%s/snap/",dir); mkdir(text); 
-#endif
+	
+	snprintf(text, sizeof(text), "%s/test.tmp",romdir); 
+	ftest = fopen(text, "w+");
+	if (ftest == NULL)
+	{
+		printf("Folder does not exist, revert to default");
+		snprintf(romdir, sizeof(romdir), "./roms");
+	}
+	else
+	{
+		remove(text);
+		fclose(ftest);
 	}
 }
 
@@ -1073,13 +1114,12 @@ int do_frontend ()
 	odx_clear_video();
 
 	while(odx_joystick_read()) { odx_timer_delay(100); }
+	
+	gethomedir();
 
 	if(first_run)
-		{
+	{
 		/* get initial home directory */
-		gethomedir(mamedir,"mame4all");
-		strcpy(romdir,"");
-
 		/* Open dingux Initialization */
 		//odx_init(1000,16,44100,16,0,60);
 
@@ -1092,38 +1132,38 @@ int do_frontend ()
 		/* Initialize list of available games */
 		game_list_init(0);
 		if (game_num_avail==0)
-			{
+		{
 			/* save current dir */
 			getcwd(curDir, 256);
 
 			/* Check for rom dir */
 			while (game_num_avail == 0)
-				{
+			{
 				odx_gamelist_text_out(10, 20, "Error: No available games found !");
 				odx_gamelist_text_out(10, 40, "Press a key to select a rom directory");
 				odx_video_flip();
 				odx_joystick_press();
 				// !!!
 				if (get_romdir(romdir) == -1)
-					{
+				{
 					want_exit = true;
 					break;
-					}
-				else
-					{
-					game_list_init(0);
-					}
 				}
+				else
+				{
+					game_list_init(0);
+				}
+			}
 
 			/* go back to default dir to avoid issue when launching mame after */
 			chdir(curDir);
-			}
-
-		first_run = false;
 		}
 
+		first_run = false;
+	}
+
 	if(!want_exit)
-		{
+	{
 		/* Select Game */
 		select_game(playemu,playgame);
 
@@ -1132,7 +1172,7 @@ int do_frontend ()
 
 		/* Execute Game */
 		execute_game (playemu,playgame);
-		}
+	}
 
 	odx_printf_init();
 
