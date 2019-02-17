@@ -29,14 +29,14 @@ LD          = $(TOOLCHAIN)/bin/gcc
 else
 
 ifeq "$(OSTYPE)" "gcw0"	
-TOOLCHAIN = /opt/retrogame-toolchain/usr
+TOOLCHAIN = /home/michael/rs97/buildroot/buildroot-rs97/output/host/
 else
-TOOLCHAIN = /opt/opendingux-toolchain/usr
+TOOLCHAIN = /home/michael/rs97/buildroot/buildroot-rs97/output/host/
 endif
 
-CC = $(TOOLCHAIN)/bin/mipsel-linux-gcc
-CPP = $(TOOLCHAIN)/bin/mipsel-linux-gcc
-LD = $(TOOLCHAIN)/bin/mipsel-linux-gcc
+CC = $(TOOLCHAIN)bin/mipsel-buildroot-linux-musl-gcc
+CPP = $(TOOLCHAIN)bin/mipsel-buildroot-linux-musl-g++
+LD = $(TOOLCHAIN)bin/mipsel-buildroot-linux-musl-gcc
 endif
 
 MD = @mkdir
@@ -49,7 +49,7 @@ EMULATOR = $(TARGET)$(EXE)
 
 DEFS = -D__ODX__ -DLSB_FIRST -DALIGN_INTS -DALIGN_SHORTS -DINLINE="static inline" -Dasm="__asm__ __volatile__" -DMAME_UNDERCLOCK -DMAME_FASTSOUND -DENABLE_AUTOFIRE -DBIGCASE
 
-W_OPTS = -Wall -Wno-write-strings -Wno-sign-compare
+W_OPTS = -Wall -Wno-write-strings -Wno-sign-compare -Wno-narrowing
 
 ifeq "$(OSTYPE)" "msys"
 F_OPTS = -fomit-frame-pointer -ffunction-sections -ffast-math -fsingle-precision-constant -fsigned-char -fpermissive

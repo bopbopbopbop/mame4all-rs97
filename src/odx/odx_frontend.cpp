@@ -10,16 +10,21 @@
 
 #include "odx_frontend_list.h"
 
-#define SCREEN_WIDTH 320
-#define SCREEN_HEIGHT 480
-#define BMP_SIZE ((SCREEN_WIDTH*SCREEN_HEIGHT)+(256*4)+54)
+#define SCREEN_WIDTH 480
+#define SCREEN_HEIGHT 272 
+//#define BMP_SIZE ((SCREEN_HEIGHT*SCREEN_WIDTH)+(256*4)+54)
+#define BMP_SIZE 131638
 
-#define Y_BOTTOM_LINE	460
+#define Y_BOTTOM_LINE	260
 #define X_BUILD		(SCREEN_WIDTH - ((16 * 6)+2))
+
+#define Y_INCREMENT 12
+
+#define MAX_AMOUNT_OF_GAMES_ONSCREEN 16
 
 #define COMPATCORES 1
 
-char frontend_build_version[] = "RS-97 V1.2 (105)";
+char frontend_build_version[] = "RS-07 V0.1";
 
 static unsigned char splash_bmp[BMP_SIZE];
 static unsigned char menu_bmp[BMP_SIZE];
@@ -69,7 +74,7 @@ static void blit_bmp_8bpp(unsigned char *out, unsigned char *in)
 static void odx_intro_screen(void) {
 	char name[256];
 	FILE *f;
-	sprintf(name,"skins/splash.bmp");
+	sprintf(name,"skins/splash_RS07.bmp");
 	f=fopen(name,"rb");
 	if (f) {
 		fread(splash_bmp,1,BMP_SIZE,f);
@@ -77,13 +82,14 @@ static void odx_intro_screen(void) {
 	}
 	blit_bmp_8bpp(od_screen8,splash_bmp);
 
-	odx_gamelist_text_out(1,ODX_SCREEN_HEIGHT - 16, frontend_build_version);
-	odx_gamelist_text_out(ODX_SCREEN_WIDTH - (10 * 8),ODX_SCREEN_HEIGHT - 16, "bob_fossil");
+	odx_gamelist_text_out(1,ODX_SCREEN_HEIGHT - Y_INCREMENT, frontend_build_version);
+	odx_gamelist_text_out(ODX_SCREEN_WIDTH - 99,Y_BOTTOM_LINE - (Y_INCREMENT * 2), "RS97 - bob_fossil");
+	odx_gamelist_text_out(ODX_SCREEN_WIDTH - (48 * 2),Y_BOTTOM_LINE - Y_INCREMENT, "RS07 - RANDOMIZE");
 
 	odx_video_flip();
 	odx_joystick_press();
 	
-	sprintf(name,"skins/menu.bmp");
+	sprintf(name,"skins/menu_RS07.bmp");
 	f=fopen(name,"rb");
 	if (f) {
 		fread(menu_bmp,1,BMP_SIZE,f);
@@ -97,8 +103,9 @@ static void game_list_init_nocache(void)
 	int i;
 	FILE *f;
 	
-	snprintf(text, sizeof(text), "%s", romdir);
-
+	
+	snprintf(text,sizeof(text),"%s",romdir);
+	
 	DIR *d=opendir(text);
 	char game[32];
 	if (d)
@@ -176,16 +183,16 @@ static void game_list_view(int *pos) {
 	int i;
 	int view_pos;
 	int aux_pos=0;
-	int screen_y = 90;
+	int screen_y = 48;
 	int screen_x = 38;
 
 	/* Draw background image */
 	blit_bmp_8bpp(od_screen8,menu_bmp);
 
 	/* draw text */
-	odx_gamelist_text_out( 4, 60,"Select ROM");
+	odx_gamelist_text_out( 4, 32,"Select ROM");
 	odx_gamelist_text_out( 4, Y_BOTTOM_LINE,"A=Select Game/Start  B=Select Rom folder");
-	odx_gamelist_text_out( 268, Y_BOTTOM_LINE,"L+R=Exit");
+	odx_gamelist_text_out( SCREEN_WIDTH - 52, Y_BOTTOM_LINE,"L+R=Exit");
 	odx_gamelist_text_out( X_BUILD,2,frontend_build_version);
 
 	/* Check Limits */
@@ -195,27 +202,27 @@ static void game_list_view(int *pos) {
 		*pos=0;
 					   
 	/* Set View Pos */
-	if (*pos<11) { // ALEK 10
+	if (*pos<MAX_AMOUNT_OF_GAMES_ONSCREEN) { // ALEK 10
 		view_pos=0;
 	} else {
-		if (*pos>game_num_avail-12) { // ALEK 11
-			view_pos=game_num_avail-22; // ALEK 21
+		if (*pos>game_num_avail-MAX_AMOUNT_OF_GAMES_ONSCREEN) { // ALEK 11
+			view_pos=game_num_avail-MAX_AMOUNT_OF_GAMES_ONSCREEN; // ALEK 21
 			view_pos=(view_pos<0?0:view_pos);
 		} else {
-			view_pos=*pos-11; // ALEK 10
+			view_pos=*pos-MAX_AMOUNT_OF_GAMES_ONSCREEN; // ALEK 10
 		}
 	}
 
 	/* Show List */
 	for (i=0;i<NUMGAMES;i++) {
 		if (frontend_drivers[i].available==1) {
-			if (aux_pos>=view_pos && aux_pos<=view_pos+21) { // ALEK 20
+			if (aux_pos>=view_pos && aux_pos<=view_pos+MAX_AMOUNT_OF_GAMES_ONSCREEN) { // ALEK 20
 				odx_gamelist_text_out( screen_x, screen_y, frontend_drivers[i].description);
 				if (aux_pos==*pos) {
 					odx_gamelist_text_out( screen_x-10, screen_y,">" );
 					odx_gamelist_text_out( screen_x-13, screen_y-1,"-" );
 				}
-				screen_y+=16;
+				screen_y+=Y_INCREMENT;
 			}
 			aux_pos++;
 		}
@@ -295,7 +302,7 @@ static int show_options(char *game)
 		odx_gamelist_text_out(x_Pos,y_Pos-20,text);
 
 		/* (0) Video Depth */
-		y_Pos += 20;
+		y_Pos += Y_INCREMENT;
 		switch (odx_video_depth)
 		{
 			case -1: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Depth    Auto"); break;
@@ -304,7 +311,7 @@ static int show_options(char *game)
 		}
 		
 		/* (1) Video Aspect */
-		y_Pos += 20;
+		y_Pos += Y_INCREMENT;
 		switch (odx_video_aspect)
 		{
 			case 0: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Normal"); break;
@@ -321,7 +328,7 @@ static int show_options(char *game)
 		}
 		
 		/* (2) Video Sync */
-		y_Pos += 20;
+		y_Pos += Y_INCREMENT;
 		switch (odx_video_sync)
 		{
 			case 1: odx_gamelist_text_out(x_Pos,y_Pos, "Video Sync     VSync"); break;
@@ -331,7 +338,7 @@ static int show_options(char *game)
 		}
 		
 		/* (3) Frame-Skip */
-		y_Pos += 20;
+		y_Pos += Y_INCREMENT;
 		if ((odx_video_sync==-1) && (odx_frameskip==-1)) odx_frameskip=0;
 		if(odx_frameskip==-1) {
 			odx_gamelist_text_out_fmt(x_Pos,y_Pos, "Frame-Skip     Auto");
@@ -341,7 +348,7 @@ static int show_options(char *game)
 		}
 
 		/* (4) Sound */
-		y_Pos += 20;
+		y_Pos += Y_INCREMENT;
 		switch(odx_sound)
 		{
 			case 0: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Sound          %s","OFF"); break;
@@ -363,17 +370,17 @@ static int show_options(char *game)
 		}
 
 		/* (5) CPU Clock */
-		y_Pos += 20;
+		y_Pos += Y_INCREMENT;
 		odx_gamelist_text_out_fmt(x_Pos,y_Pos,"CPU Clock      %d%%",odx_clock_cpu);
 
 		/* (6) Audio Clock */
-		y_Pos += 20;
+		y_Pos += Y_INCREMENT;
 		odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Audio Clock    %d%%",odx_clock_sound);
 
 		if(strcmp(playemu, "neomame"))
 			{
 			/* (7) CPU cores */
-			y_Pos += 20;
+			y_Pos += Y_INCREMENT;
 			switch (odx_cpu_cores)
 				{
 				case 0: odx_gamelist_text_out(x_Pos,y_Pos, "CPU FAST cores None"); break;
@@ -386,7 +393,7 @@ static int show_options(char *game)
 
 
 		/* (8) Cheats */
-		y_Pos += 20;
+		y_Pos += Y_INCREMENT;
 		if (odx_cheat)
 			odx_gamelist_text_out(x_Pos,y_Pos,"Cheats         ON");
 		else
@@ -396,7 +403,7 @@ static int show_options(char *game)
 		//odx_gamelist_text_out(x_Pos,y_Pos,"Press B to confirm, X to return\0");
 
 		/* Show currently selected item */
-		odx_gamelist_text_out(x_Pos-16,y_PosTop+(selected_option*20)+20," >");
+		odx_gamelist_text_out(x_Pos-16,y_PosTop+(selected_option*Y_INCREMENT)+Y_INCREMENT," >");
 
 		odx_video_flip();
 		while (odx_joystick_read()) { odx_timer_delay(100); }
@@ -534,15 +541,15 @@ static void odx_exit(char *param)
 	FILE* filesave;
 	char text[512];
 	
-	snprintf(text, sizeof(text), "%s/frontend/mame.lst",mamedir);
+	snprintf(text,sizeof(text),"%s/frontend/mame.lst",mamedir);
 	remove(text);
 	
 	snprintf(text, sizeof(text), "%s/cfg/romsave.txt", mamedir); 
-	
+
 	if (game_num_avail > 0)
 	{
 		printf("\nSaving rom directory %s to %s\n", romdir, text);
-		
+
 		filesave = fopen(text, "w+");
 		if (filesave)
 		{
@@ -550,6 +557,7 @@ static void odx_exit(char *param)
 			fclose(filesave);
 		}
 	}
+	
 	
 	//sync();
 	//odx_deinit();
@@ -573,7 +581,7 @@ void odx_save_config(void) {
 	FILE *f;
 
 	/* Write default configuration */
-	snprintf(curCfg, sizeof(curCfg), "%s/frontend/mame.cfg",mamedir);
+	snprintf(curCfg,sizeof(curCfg),"%s/frontend/mame.cfg",mamedir);
 	f=fopen(curCfg,"w");
 	if (f) {
 		fprintf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s",odx_freq,odx_video_depth,odx_video_aspect,odx_video_sync,
@@ -613,8 +621,8 @@ static void select_game(char *emu, char *game)
 			}
 		if (ExKey & OD_UP) last_game_selected--;
 		if (ExKey & OD_DOWN) last_game_selected++;
-		if (ExKey & OD_RIGHT) last_game_selected-=22; // ALEK 21
-		if (ExKey & OD_LEFT) last_game_selected+=22; // ALEK 21
+		if (ExKey & OD_LEFT) last_game_selected-=MAX_AMOUNT_OF_GAMES_ONSCREEN; // ALEK 21
+		if (ExKey & OD_RIGHT) last_game_selected+=MAX_AMOUNT_OF_GAMES_ONSCREEN; // ALEK 21
 
 		if ((ExKey & OD_A) || (ExKey & OD_START) )
 		{
@@ -628,6 +636,7 @@ static void select_game(char *emu, char *game)
 			}
 		}
 		
+		
 		/* Get rom directory and reset list after that */
 		if ((ExKey & OD_B) )
 		{
@@ -639,6 +648,7 @@ static void select_game(char *emu, char *game)
 			last_game_selected = 0;
 			odx_video_flip();
 		}
+		
 		
 	}
 }
@@ -885,7 +895,7 @@ void execute_game (char *playemu, char *playgame)
 //	execv(mame_args[0], args);
 }
  
-#define FILE_LIST_ROWS 19
+#define FILE_LIST_ROWS 10
 #define MAX_FILES 512
 typedef struct  {
 	char name[255];
@@ -899,7 +909,6 @@ int sort_function(const void *src_str_ptr, const void *dest_str_ptr) {
   
   return strcmp (p1->name, p2->name);
 }
-
 
 signed int get_romdir(char *result) 
 {
@@ -975,9 +984,9 @@ signed int get_romdir(char *result)
 			blit_bmp_8bpp(od_screen8,menu_bmp);
 			
 			odx_gamelist_text_out( 182, 60,"Select a ROM directory");
-			odx_gamelist_text_out( 4, 430,current_dir_short );
+			odx_gamelist_text_out( 4, Y_BOTTOM_LINE - Y_INCREMENT,current_dir_short );
 			odx_gamelist_text_out( 4, Y_BOTTOM_LINE,"A=Enter dir START=Select dir");
-			odx_gamelist_text_out( 280, Y_BOTTOM_LINE,"B=Quit");
+			odx_gamelist_text_out( SCREEN_WIDTH - 40, Y_BOTTOM_LINE,"B=Quit");
 			odx_gamelist_text_out( X_BUILD,2,frontend_build_version);
 			
 			for(i = 0, current_filedir_number = i + current_filedir_scroll_value; i < FILE_LIST_ROWS; i++, current_filedir_number++) {
@@ -1063,8 +1072,9 @@ signed int get_romdir(char *result)
 
 void gethomedir() {
 	char text[512];
-	FILE *filesave, *ftest;
 	
+	FILE *filesave, *ftest;
+
 	snprintf(mamedir, sizeof(mamedir), "%s/.mame4all", getenv("HOME"));
 	mkdir(mamedir,0755); // create $HOME/.program if it doesn't exist
 	snprintf(text, sizeof(text), "%s/frontend/",mamedir); 
@@ -1079,16 +1089,16 @@ void gethomedir() {
 	mkdir(text,0755); 
 	snprintf(text, sizeof(text), "%s/snap/",mamedir); 
 	mkdir(text,0755); 
-	
+
 	snprintf(text, sizeof(text), "%s/cfg/romsave.txt",mamedir); 
-	
+
 	filesave = fopen(text, "r+");
 	if (filesave)
 	{
 		fread(romdir, 512, 1, filesave);
 		fclose(filesave);
 	}
-	
+		
 	snprintf(text, sizeof(text), "%s/test.tmp",romdir); 
 	ftest = fopen(text, "w+");
 	if (ftest == NULL)
@@ -1100,6 +1110,7 @@ void gethomedir() {
 	{
 		remove(text);
 		fclose(ftest);
+	
 	}
 }
 
@@ -1114,12 +1125,13 @@ int do_frontend ()
 	odx_clear_video();
 
 	while(odx_joystick_read()) { odx_timer_delay(100); }
-	
-	gethomedir();
 
+	gethomedir();
+	
 	if(first_run)
 	{
 		/* get initial home directory */
+		
 		/* Open dingux Initialization */
 		//odx_init(1000,16,44100,16,0,60);
 
@@ -1163,7 +1175,7 @@ int do_frontend ()
 	}
 
 	if(!want_exit)
-	{
+		{
 		/* Select Game */
 		select_game(playemu,playgame);
 

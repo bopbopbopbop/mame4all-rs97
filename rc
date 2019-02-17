@@ -1,0 +1,432 @@
+[1mdiff --git a/makefile.odx b/makefile.odx[m
+[1mindex 290fefe..ec3a910 100644[m
+[1m--- a/makefile.odx[m
+[1m+++ b/makefile.odx[m
+[36m@@ -29,14 +29,14 @@[m [mLD          = $(TOOLCHAIN)/bin/gcc[m
+ else[m
+ [m
+ ifeq "$(OSTYPE)" "gcw0"	[m
+[31m-TOOLCHAIN = /opt/retrogame-toolchain/usr[m
+[32m+[m[32mTOOLCHAIN = /home/michael/rs97/buildroot/buildroot-rs97/output/host/[m
+ else[m
+[31m-TOOLCHAIN = /opt/opendingux-toolchain/usr[m
+[32m+[m[32mTOOLCHAIN = /home/michael/rs97/buildroot/buildroot-rs97/output/host/[m
+ endif[m
+ [m
+[31m-CC = $(TOOLCHAIN)/bin/mipsel-linux-gcc[m
+[31m-CPP = $(TOOLCHAIN)/bin/mipsel-linux-gcc[m
+[31m-LD = $(TOOLCHAIN)/bin/mipsel-linux-gcc[m
+[32m+[m[32mCC = $(TOOLCHAIN)bin/mipsel-buildroot-linux-musl-gcc[m
+[32m+[m[32mCPP = $(TOOLCHAIN)bin/mipsel-buildroot-linux-musl-g++[m
+[32m+[m[32mLD = $(TOOLCHAIN)bin/mipsel-buildroot-linux-musl-gcc[m
+ endif[m
+ [m
+ MD = @mkdir[m
+[36m@@ -49,7 +49,7 @@[m [mEMULATOR = $(TARGET)$(EXE)[m
+ [m
+ DEFS = -D__ODX__ -DLSB_FIRST -DALIGN_INTS -DALIGN_SHORTS -DINLINE="static inline" -Dasm="__asm__ __volatile__" -DMAME_UNDERCLOCK -DMAME_FASTSOUND -DENABLE_AUTOFIRE -DBIGCASE[m
+ [m
+[31m-W_OPTS = -Wall -Wno-write-strings -Wno-sign-compare[m
+[32m+[m[32mW_OPTS = -Wall -Wno-write-strings -Wno-sign-compare -Wno-narrowing[m
+ [m
+ ifeq "$(OSTYPE)" "msys"[m
+ F_OPTS = -fomit-frame-pointer -ffunction-sections -ffast-math -fsingle-precision-constant -fsigned-char -fpermissive[m
+[1mdiff --git a/src/odx/minimal.cpp b/src/odx/minimal.cpp[m
+[1mindex dc0ae64..6fc6119 100644[m
+[1m--- a/src/odx/minimal.cpp[m
+[1m+++ b/src/odx/minimal.cpp[m
+[36m@@ -541,6 +541,7 @@[m [mstatic void odx_text(unsigned short *scr, int x, int y, char *text, int color)[m
+ 			scr[copy*ODX_SCREEN_WIDTH+6]=(fontdata8x8[((text[i])*8)+l]&0x02)?odx_palette_rgb[color]:scr[copy*ODX_SCREEN_WIDTH+6];[m
+ 			scr[copy*ODX_SCREEN_WIDTH+7]=(fontdata8x8[((text[i])*8)+l]&0x01)?odx_palette_rgb[color]:scr[copy*ODX_SCREEN_WIDTH+7];[m
+ 			copy++;[m
+[32m+[m			[32m/**[m
+ 			scr[copy*ODX_SCREEN_WIDTH+0]=(fontdata8x8[((text[i])*8)+l]&0x80)?odx_palette_rgb[color]:scr[copy*ODX_SCREEN_WIDTH+0];[m
+ 			scr[copy*ODX_SCREEN_WIDTH+1]=(fontdata8x8[((text[i])*8)+l]&0x40)?odx_palette_rgb[color]:scr[copy*ODX_SCREEN_WIDTH+1];[m
+ 			scr[copy*ODX_SCREEN_WIDTH+2]=(fontdata8x8[((text[i])*8)+l]&0x20)?odx_palette_rgb[color]:scr[copy*ODX_SCREEN_WIDTH+2];[m
+[36m@@ -549,6 +550,7 @@[m [mstatic void odx_text(unsigned short *scr, int x, int y, char *text, int color)[m
+ 			scr[copy*ODX_SCREEN_WIDTH+5]=(fontdata8x8[((text[i])*8)+l]&0x04)?odx_palette_rgb[color]:scr[copy*ODX_SCREEN_WIDTH+5];[m
+ 			scr[copy*ODX_SCREEN_WIDTH+6]=(fontdata8x8[((text[i])*8)+l]&0x02)?odx_palette_rgb[color]:scr[copy*ODX_SCREEN_WIDTH+6];[m
+ 			scr[copy*ODX_SCREEN_WIDTH+7]=(fontdata8x8[((text[i])*8)+l]&0x01)?odx_palette_rgb[color]:scr[copy*ODX_SCREEN_WIDTH+7];				copy++;[m
+[32m+[m		[32m   */[m
+ 		}[m
+ 		//scr+=8;[m
+ 		scr+=6;[m
+[1mdiff --git a/src/odx/minimal.h b/src/odx/minimal.h[m
+[1mindex c8925c9..9f64b98 100644[m
+[1m--- a/src/odx/minimal.h[m
+[1m+++ b/src/odx/minimal.h[m
+[36m@@ -22,8 +22,8 @@[m
+ [m
+ #include <SDL/SDL.h>[m
+ [m
+[31m-#define ODX_SCREEN_WIDTH 320[m
+[31m-#define ODX_SCREEN_HEIGHT 480[m
+[32m+[m[32m#define ODX_SCREEN_WIDTH 480[m
+[32m+[m[32m#define ODX_SCREEN_HEIGHT 272[m
+ [m
+ #define odx_video_color8(C,R,G,B)  (odx_palette_rgb[C] = ((((R)&0xF8)<<8)|(((G)&0xFC)<<3)|(((B)&0xF8)>>3)))[m
+ #define odx_video_color16(R,G,B,A) ((((R)&0xF8)<<8)|(((G)&0xFC)<<3)|(((B)&0xF8)>>3))[m
+[1mdiff --git a/src/odx/odx_frontend.cpp b/src/odx/odx_frontend.cpp[m
+[1mindex 1ddeb9d..1270f17 100644[m
+[1m--- a/src/odx/odx_frontend.cpp[m
+[1m+++ b/src/odx/odx_frontend.cpp[m
+[36m@@ -10,16 +10,21 @@[m
+ [m
+ #include "odx_frontend_list.h"[m
+ [m
+[31m-#define SCREEN_WIDTH 320[m
+[31m-#define SCREEN_HEIGHT 480[m
+[31m-#define BMP_SIZE ((SCREEN_WIDTH*SCREEN_HEIGHT)+(256*4)+54)[m
+[32m+[m[32m#define SCREEN_WIDTH 480[m
+[32m+[m[32m#define SCREEN_HEIGHT 272[m[41m [m
+[32m+[m[32m//#define BMP_SIZE ((SCREEN_HEIGHT*SCREEN_WIDTH)+(256*4)+54)[m
+[32m+[m[32m#define BMP_SIZE 131638[m
+ [m
+[31m-#define Y_BOTTOM_LINE	460[m
+[32m+[m[32m#define Y_BOTTOM_LINE	260[m
+ #define X_BUILD		(SCREEN_WIDTH - ((16 * 6)+2))[m
+ [m
+[32m+[m[32m#define Y_INCREMENT 12[m
+[32m+[m
+[32m+[m[32m#define MAX_AMOUNT_OF_GAMES_ONSCREEN 16[m
+[32m+[m
+ #define COMPATCORES 1[m
+ [m
+[31m-char frontend_build_version[] = "RS-97 V1.2 (105)";[m
+[32m+[m[32mchar frontend_build_version[] = "RS-07 V0.1";[m
+ [m
+ static unsigned char splash_bmp[BMP_SIZE];[m
+ static unsigned char menu_bmp[BMP_SIZE];[m
+[36m@@ -69,7 +74,7 @@[m [mstatic void blit_bmp_8bpp(unsigned char *out, unsigned char *in)[m
+ static void odx_intro_screen(void) {[m
+ 	char name[256];[m
+ 	FILE *f;[m
+[31m-	sprintf(name,"skins/splash.bmp");[m
+[32m+[m	[32msprintf(name,"skins/splash_RS07.bmp");[m
+ 	f=fopen(name,"rb");[m
+ 	if (f) {[m
+ 		fread(splash_bmp,1,BMP_SIZE,f);[m
+[36m@@ -77,13 +82,14 @@[m [mstatic void odx_intro_screen(void) {[m
+ 	}[m
+ 	blit_bmp_8bpp(od_screen8,splash_bmp);[m
+ [m
+[31m-	odx_gamelist_text_out(1,ODX_SCREEN_HEIGHT - 16, frontend_build_version);[m
+[31m-	odx_gamelist_text_out(ODX_SCREEN_WIDTH - (10 * 8),ODX_SCREEN_HEIGHT - 16, "bob_fossil");[m
+[32m+[m	[32modx_gamelist_text_out(1,ODX_SCREEN_HEIGHT - Y_INCREMENT, frontend_build_version);[m
+[32m+[m	[32modx_gamelist_text_out(ODX_SCREEN_WIDTH - 99,Y_BOTTOM_LINE - (Y_INCREMENT * 2), "RS97 - bob_fossil");[m
+[32m+[m	[32modx_gamelist_text_out(ODX_SCREEN_WIDTH - (48 * 2),Y_BOTTOM_LINE - Y_INCREMENT, "RS07 - RANDOMIZE");[m
+ [m
+ 	odx_video_flip();[m
+ 	odx_joystick_press();[m
+ 	[m
+[31m-	sprintf(name,"skins/menu.bmp");[m
+[32m+[m	[32msprintf(name,"skins/menu_RS07.bmp");[m
+ 	f=fopen(name,"rb");[m
+ 	if (f) {[m
+ 		fread(menu_bmp,1,BMP_SIZE,f);[m
+[36m@@ -97,8 +103,9 @@[m [mstatic void game_list_init_nocache(void)[m
+ 	int i;[m
+ 	FILE *f;[m
+ 	[m
+[31m-	snprintf(text, sizeof(text), "%s", romdir);[m
+[31m-[m
+[32m+[m[41m	[m
+[32m+[m	[32msnprintf(text,sizeof(text),"%s",romdir);[m
+[32m+[m[41m	[m
+ 	DIR *d=opendir(text);[m
+ 	char game[32];[m
+ 	if (d)[m
+[36m@@ -176,16 +183,16 @@[m [mstatic void game_list_view(int *pos) {[m
+ 	int i;[m
+ 	int view_pos;[m
+ 	int aux_pos=0;[m
+[31m-	int screen_y = 90;[m
+[32m+[m	[32mint screen_y = 48;[m
+ 	int screen_x = 38;[m
+ [m
+ 	/* Draw background image */[m
+ 	blit_bmp_8bpp(od_screen8,menu_bmp);[m
+ [m
+ 	/* draw text */[m
+[31m-	odx_gamelist_text_out( 4, 60,"Select ROM");[m
+[32m+[m	[32modx_gamelist_text_out( 4, 32,"Select ROM");[m
+ 	odx_gamelist_text_out( 4, Y_BOTTOM_LINE,"A=Select Game/Start  B=Select Rom folder");[m
+[31m-	odx_gamelist_text_out( 268, Y_BOTTOM_LINE,"L+R=Exit");[m
+[32m+[m	[32modx_gamelist_text_out( SCREEN_WIDTH - 52, Y_BOTTOM_LINE,"L+R=Exit");[m
+ 	odx_gamelist_text_out( X_BUILD,2,frontend_build_version);[m
+ [m
+ 	/* Check Limits */[m
+[36m@@ -195,27 +202,27 @@[m [mstatic void game_list_view(int *pos) {[m
+ 		*pos=0;[m
+ 					   [m
+ 	/* Set View Pos */[m
+[31m-	if (*pos<11) { // ALEK 10[m
+[32m+[m	[32mif (*pos<MAX_AMOUNT_OF_GAMES_ONSCREEN) { // ALEK 10[m
+ 		view_pos=0;[m
+ 	} else {[m
+[31m-		if (*pos>game_num_avail-12) { // ALEK 11[m
+[31m-			view_pos=game_num_avail-22; // ALEK 21[m
+[32m+[m		[32mif (*pos>game_num_avail-MAX_AMOUNT_OF_GAMES_ONSCREEN) { // ALEK 11[m
+[32m+[m			[32mview_pos=game_num_avail-MAX_AMOUNT_OF_GAMES_ONSCREEN; // ALEK 21[m
+ 			view_pos=(view_pos<0?0:view_pos);[m
+ 		} else {[m
+[31m-			view_pos=*pos-11; // ALEK 10[m
+[32m+[m			[32mview_pos=*pos-MAX_AMOUNT_OF_GAMES_ONSCREEN; // ALEK 10[m
+ 		}[m
+ 	}[m
+ [m
+ 	/* Show List */[m
+ 	for (i=0;i<NUMGAMES;i++) {[m
+ 		if (frontend_drivers[i].available==1) {[m
+[31m-			if (aux_pos>=view_pos && aux_pos<=view_pos+21) { // ALEK 20[m
+[32m+[m			[32mif (aux_pos>=view_pos && aux_pos<=view_pos+MAX_AMOUNT_OF_GAMES_ONSCREEN) { // ALEK 20[m
+ 				odx_gamelist_text_out( screen_x, screen_y, frontend_drivers[i].description);[m
+ 				if (aux_pos==*pos) {[m
+ 					odx_gamelist_text_out( screen_x-10, screen_y,">" );[m
+ 					odx_gamelist_text_out( screen_x-13, screen_y-1,"-" );[m
+ 				}[m
+[31m-				screen_y+=16;[m
+[32m+[m				[32mscreen_y+=Y_INCREMENT;[m
+ 			}[m
+ 			aux_pos++;[m
+ 		}[m
+[36m@@ -295,7 +302,7 @@[m [mstatic int show_options(char *game)[m
+ 		odx_gamelist_text_out(x_Pos,y_Pos-20,text);[m
+ [m
+ 		/* (0) Video Depth */[m
+[31m-		y_Pos += 20;[m
+[32m+[m		[32my_Pos += Y_INCREMENT;[m
+ 		switch (odx_video_depth)[m
+ 		{[m
+ 			case -1: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Depth    Auto"); break;[m
+[36m@@ -304,7 +311,7 @@[m [mstatic int show_options(char *game)[m
+ 		}[m
+ 		[m
+ 		/* (1) Video Aspect */[m
+[31m-		y_Pos += 20;[m
+[32m+[m		[32my_Pos += Y_INCREMENT;[m
+ 		switch (odx_video_aspect)[m
+ 		{[m
+ 			case 0: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Normal"); break;[m
+[36m@@ -321,7 +328,7 @@[m [mstatic int show_options(char *game)[m
+ 		}[m
+ 		[m
+ 		/* (2) Video Sync */[m
+[31m-		y_Pos += 20;[m
+[32m+[m		[32my_Pos += Y_INCREMENT;[m
+ 		switch (odx_video_sync)[m
+ 		{[m
+ 			case 1: odx_gamelist_text_out(x_Pos,y_Pos, "Video Sync     VSync"); break;[m
+[36m@@ -331,7 +338,7 @@[m [mstatic int show_options(char *game)[m
+ 		}[m
+ 		[m
+ 		/* (3) Frame-Skip */[m
+[31m-		y_Pos += 20;[m
+[32m+[m		[32my_Pos += Y_INCREMENT;[m
+ 		if ((odx_video_sync==-1) && (odx_frameskip==-1)) odx_frameskip=0;[m
+ 		if(odx_frameskip==-1) {[m
+ 			odx_gamelist_text_out_fmt(x_Pos,y_Pos, "Frame-Skip     Auto");[m
+[36m@@ -341,7 +348,7 @@[m [mstatic int show_options(char *game)[m
+ 		}[m
+ [m
+ 		/* (4) Sound */[m
+[31m-		y_Pos += 20;[m
+[32m+[m		[32my_Pos += Y_INCREMENT;[m
+ 		switch(odx_sound)[m
+ 		{[m
+ 			case 0: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Sound          %s","OFF"); break;[m
+[36m@@ -363,17 +370,17 @@[m [mstatic int show_options(char *game)[m
+ 		}[m
+ [m
+ 		/* (5) CPU Clock */[m
+[31m-		y_Pos += 20;[m
+[32m+[m		[32my_Pos += Y_INCREMENT;[m
+ 		odx_gamelist_text_out_fmt(x_Pos,y_Pos,"CPU Clock      %d%%",odx_clock_cpu);[m
+ [m
+ 		/* (6) Audio Clock */[m
+[31m-		y_Pos += 20;[m
+[32m+[m		[32my_Pos += Y_INCREMENT;[m
+ 		odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Audio Clock    %d%%",odx_clock_sound);[m
+ [m
+ 		if(strcmp(playemu, "neomame"))[m
+ 			{[m
+ 			/* (7) CPU cores */[m
+[31m-			y_Pos += 20;[m
+[32m+[m			[32my_Pos += Y_INCREMENT;[m
+ 			switch (odx_cpu_cores)[m
+ 				{[m
+ 				case 0: odx_gamelist_text_out(x_Pos,y_Pos, "CPU FAST cores None"); break;[m
+[36m@@ -386,7 +393,7 @@[m [mstatic int show_options(char *game)[m
+ [m
+ [m
+ 		/* (8) Cheats */[m
+[31m-		y_Pos += 20;[m
+[32m+[m		[32my_Pos += Y_INCREMENT;[m
+ 		if (odx_cheat)[m
+ 			odx_gamelist_text_out(x_Pos,y_Pos,"Cheats         ON");[m
+ 		else[m
+[36m@@ -396,7 +403,7 @@[m [mstatic int show_options(char *game)[m
+ 		//odx_gamelist_text_out(x_Pos,y_Pos,"Press B to confirm, X to return\0");[m
+ [m
+ 		/* Show currently selected item */[m
+[31m-		odx_gamelist_text_out(x_Pos-16,y_PosTop+(selected_option*20)+20," >");[m
+[32m+[m		[32modx_gamelist_text_out(x_Pos-16,y_PosTop+(selected_option*Y_INCREMENT)+Y_INCREMENT," >");[m
+ [m
+ 		odx_video_flip();[m
+ 		while (odx_joystick_read()) { odx_timer_delay(100); }[m
+[36m@@ -534,15 +541,15 @@[m [mstatic void odx_exit(char *param)[m
+ 	FILE* filesave;[m
+ 	char text[512];[m
+ 	[m
+[31m-	snprintf(text, sizeof(text), "%s/frontend/mame.lst",mamedir);[m
+[32m+[m	[32msnprintf(text,sizeof(text),"%s/frontend/mame.lst",mamedir);[m
+ 	remove(text);[m
+ 	[m
+ 	snprintf(text, sizeof(text), "%s/cfg/romsave.txt", mamedir); [m
+[31m-	[m
+[32m+[m
+ 	if (game_num_avail > 0)[m
+ 	{[m
+ 		printf("\nSaving rom directory %s to %s\n", romdir, text);[m
+[31m-		[m
+[32m+[m
+ 		filesave = fopen(text, "w+");[m
+ 		if (filesave)[m
+ 		{[m
+[36m@@ -551,6 +558,7 @@[m [mstatic void odx_exit(char *param)[m
+ 		}[m
+ 	}[m
+ 	[m
+[32m+[m[41m	[m
+ 	//sync();[m
+ 	//odx_deinit();[m
+ }[m
+[36m@@ -573,7 +581,7 @@[m [mvoid odx_save_config(void) {[m
+ 	FILE *f;[m
+ [m
+ 	/* Write default configuration */[m
+[31m-	snprintf(curCfg, sizeof(curCfg), "%s/frontend/mame.cfg",mamedir);[m
+[32m+[m	[32msnprintf(curCfg,sizeof(curCfg),"%s/frontend/mame.cfg",mamedir);[m
+ 	f=fopen(curCfg,"w");[m
+ 	if (f) {[m
+ 		fprintf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s",odx_freq,odx_video_depth,odx_video_aspect,odx_video_sync,[m
+[36m@@ -613,8 +621,8 @@[m [mstatic void select_game(char *emu, char *game)[m
+ 			}[m
+ 		if (ExKey & OD_UP) last_game_selected--;[m
+ 		if (ExKey & OD_DOWN) last_game_selected++;[m
+[31m-		if (ExKey & OD_RIGHT) last_game_selected-=22; // ALEK 21[m
+[31m-		if (ExKey & OD_LEFT) last_game_selected+=22; // ALEK 21[m
+[32m+[m		[32mif (ExKey & OD_LEFT) last_game_selected-=MAX_AMOUNT_OF_GAMES_ONSCREEN; // ALEK 21[m
+[32m+[m		[32mif (ExKey & OD_RIGHT) last_game_selected+=MAX_AMOUNT_OF_GAMES_ONSCREEN; // ALEK 21[m
+ [m
+ 		if ((ExKey & OD_A) || (ExKey & OD_START) )[m
+ 		{[m
+[36m@@ -628,6 +636,7 @@[m [mstatic void select_game(char *emu, char *game)[m
+ 			}[m
+ 		}[m
+ 		[m
+[32m+[m[41m		[m
+ 		/* Get rom directory and reset list after that */[m
+ 		if ((ExKey & OD_B) )[m
+ 		{[m
+[36m@@ -640,6 +649,7 @@[m [mstatic void select_game(char *emu, char *game)[m
+ 			odx_video_flip();[m
+ 		}[m
+ 		[m
+[32m+[m[41m		[m
+ 	}[m
+ }[m
+ [m
+[36m@@ -885,7 +895,7 @@[m [mvoid execute_game (char *playemu, char *playgame)[m
+ //	execv(mame_args[0], args);[m
+ }[m
+  [m
+[31m-#define FILE_LIST_ROWS 19[m
+[32m+[m[32m#define FILE_LIST_ROWS 10[m
+ #define MAX_FILES 512[m
+ typedef struct  {[m
+ 	char name[255];[m
+[36m@@ -900,7 +910,6 @@[m [mint sort_function(const void *src_str_ptr, const void *dest_str_ptr) {[m
+   return strcmp (p1->name, p2->name);[m
+ }[m
+ [m
+[31m-[m
+ signed int get_romdir(char *result) [m
+ {[m
+ 	unsigned long ExKey;[m
+[36m@@ -975,9 +984,9 @@[m [msigned int get_romdir(char *result)[m
+ 			blit_bmp_8bpp(od_screen8,menu_bmp);[m
+ 			[m
+ 			odx_gamelist_text_out( 182, 60,"Select a ROM directory");[m
+[31m-			odx_gamelist_text_out( 4, 430,current_dir_short );[m
+[32m+[m			[32modx_gamelist_text_out( 4, Y_BOTTOM_LINE - Y_INCREMENT,current_dir_short );[m
+ 			odx_gamelist_text_out( 4, Y_BOTTOM_LINE,"A=Enter dir START=Select dir");[m
+[31m-			odx_gamelist_text_out( 280, Y_BOTTOM_LINE,"B=Quit");[m
+[32m+[m			[32modx_gamelist_text_out( SCREEN_WIDTH - 40, Y_BOTTOM_LINE,"B=Quit");[m
+ 			odx_gamelist_text_out( X_BUILD,2,frontend_build_version);[m
+ 			[m
+ 			for(i = 0, current_filedir_number = i + current_filedir_scroll_value; i < FILE_LIST_ROWS; i++, current_filedir_number++) {[m
+[36m@@ -1063,8 +1072,9 @@[m [msigned int get_romdir(char *result)[m
+ [m
+ void gethomedir() {[m
+ 	char text[512];[m
+[31m-	FILE *filesave, *ftest;[m
+ 	[m
+[32m+[m	[32mFILE *filesave, *ftest;[m
+[32m+[m
+ 	snprintf(mamedir, sizeof(mamedir), "%s/.mame4all", getenv("HOME"));[m
+ 	mkdir(mamedir,0755); // create $HOME/.program if it doesn't exist[m
+ 	snprintf(text, sizeof(text), "%s/frontend/",mamedir); [m
+[36m@@ -1079,16 +1089,16 @@[m [mvoid gethomedir() {[m
+ 	mkdir(text,0755); [m
+ 	snprintf(text, sizeof(text), "%s/snap/",mamedir); [m
+ 	mkdir(text,0755); [m
+[31m-	[m
+[32m+[m
+ 	snprintf(text, sizeof(text), "%s/cfg/romsave.txt",mamedir); [m
+[31m-	[m
+[32m+[m
+ 	filesave = fopen(text, "r+");[m
+ 	if (filesave)[m
+ 	{[m
+ 		fread(romdir, 512, 1, filesave);[m
+ 		fclose(filesave);[m
+ 	}[m
+[31m-	[m
+[32m+[m[41m		[m
+ 	snprintf(text, sizeof(text), "%s/test.tmp",romdir); [m
+ 	ftest = fopen(text, "w+");[m
+ 	if (ftest == NULL)[m
+[36m@@ -1100,6 +1110,7 @@[m [mvoid gethomedir() {[m
+ 	{[m
+ 		remove(text);[m
+ 		fclose(ftest);[m
+[32m+[m[41m	[m
+ 	}[m
+ }[m
+ [m
+[36m@@ -1114,12 +1125,13 @@[m [mint do_frontend ()[m
+ 	odx_clear_video();[m
+ [m
+ 	while(odx_joystick_read()) { odx_timer_delay(100); }[m
+[31m-	[m
+[31m-	gethomedir();[m
+ [m
+[32m+[m	[32mgethomedir();[m
+[32m+[m[41m	[m
+ 	if(first_run)[m
+ 	{[m
+ 		/* get initial home directory */[m
+[32m+[m[41m		[m
+ 		/* Open dingux Initialization */[m
+ 		//odx_init(1000,16,44100,16,0,60);[m
+ [m
+[36m@@ -1163,7 +1175,7 @@[m [mint do_frontend ()[m
+ 	}[m
+ [m
+ 	if(!want_exit)[m
+[31m-	{[m
+[32m+[m		[32m{[m
+ 		/* Select Game */[m
+ 		select_game(playemu,playgame);[m
+ [m

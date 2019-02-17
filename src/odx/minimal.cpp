@@ -541,6 +541,7 @@ static void odx_text(unsigned short *scr, int x, int y, char *text, int color)
 			scr[copy*ODX_SCREEN_WIDTH+6]=(fontdata8x8[((text[i])*8)+l]&0x02)?odx_palette_rgb[color]:scr[copy*ODX_SCREEN_WIDTH+6];
 			scr[copy*ODX_SCREEN_WIDTH+7]=(fontdata8x8[((text[i])*8)+l]&0x01)?odx_palette_rgb[color]:scr[copy*ODX_SCREEN_WIDTH+7];
 			copy++;
+			/**
 			scr[copy*ODX_SCREEN_WIDTH+0]=(fontdata8x8[((text[i])*8)+l]&0x80)?odx_palette_rgb[color]:scr[copy*ODX_SCREEN_WIDTH+0];
 			scr[copy*ODX_SCREEN_WIDTH+1]=(fontdata8x8[((text[i])*8)+l]&0x40)?odx_palette_rgb[color]:scr[copy*ODX_SCREEN_WIDTH+1];
 			scr[copy*ODX_SCREEN_WIDTH+2]=(fontdata8x8[((text[i])*8)+l]&0x20)?odx_palette_rgb[color]:scr[copy*ODX_SCREEN_WIDTH+2];
@@ -549,6 +550,7 @@ static void odx_text(unsigned short *scr, int x, int y, char *text, int color)
 			scr[copy*ODX_SCREEN_WIDTH+5]=(fontdata8x8[((text[i])*8)+l]&0x04)?odx_palette_rgb[color]:scr[copy*ODX_SCREEN_WIDTH+5];
 			scr[copy*ODX_SCREEN_WIDTH+6]=(fontdata8x8[((text[i])*8)+l]&0x02)?odx_palette_rgb[color]:scr[copy*ODX_SCREEN_WIDTH+6];
 			scr[copy*ODX_SCREEN_WIDTH+7]=(fontdata8x8[((text[i])*8)+l]&0x01)?odx_palette_rgb[color]:scr[copy*ODX_SCREEN_WIDTH+7];				copy++;
+		   */
 		}
 		//scr+=8;
 		scr+=6;
