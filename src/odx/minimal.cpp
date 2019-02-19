@@ -282,7 +282,7 @@ void odx_init(int ticks_per_second, int bpp, int rate, int bits, int stereo, int
 
 	/* General video & audio stuff */
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
-	video = SDL_SetVideoMode(ODX_SCREEN_WIDTH, ODX_SCREEN_HEIGHT, 16, SDL_HWSURFACE);//SDL_DOUBLEBUF | 
+	video = SDL_SetVideoMode(ODX_SCREEN_WIDTH, ODX_SCREEN_HEIGHT, 16, SDL_HWSURFACE);  //SDL_DOUBLEBUF | 
 	if(video == NULL) {
 		fprintf(stderr, "Couldn't set video mode: %s\n", SDL_GetError());
 		exit(1);

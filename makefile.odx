@@ -2,6 +2,8 @@
 #OSTYPE=msys
 #OSTYPE=oda320
 OSTYPE=gcw0
+#SUBTYPE=RS07
+SUBTYPE=RS97
 
 ifeq ($(TARGET),)
 TARGET = mame
@@ -29,14 +31,15 @@ LD          = $(TOOLCHAIN)/bin/gcc
 else
 
 ifeq "$(OSTYPE)" "gcw0"	
-TOOLCHAIN = /home/michael/rs97/buildroot/buildroot-rs97/output/host/
+TOOLCHAIN = /opt/buildroot-2018.02.9/output/host/
 else
-TOOLCHAIN = /home/michael/rs97/buildroot/buildroot-rs97/output/host/
+TOOLCHAIN = /opt/buildroot-2018.02.9/output/host/
 endif
 
-CC = $(TOOLCHAIN)bin/mipsel-buildroot-linux-musl-gcc
-CPP = $(TOOLCHAIN)bin/mipsel-buildroot-linux-musl-g++
-LD = $(TOOLCHAIN)bin/mipsel-buildroot-linux-musl-gcc
+
+CC = $(TOOLCHAIN)bin/mipsel-buildroot-linux-uclibc-gcc
+CPP = $(TOOLCHAIN)bin/mipsel-buildroot-linux-uclibc-g++
+LD = $(TOOLCHAIN)bin/mipsel-buildroot-linux-uclibc-gcc
 endif
 
 MD = @mkdir
@@ -47,7 +50,11 @@ DEVLIBS =
 
 EMULATOR = $(TARGET)$(EXE)
 
-DEFS = -D__ODX__ -DLSB_FIRST -DALIGN_INTS -DALIGN_SHORTS -DINLINE="static inline" -Dasm="__asm__ __volatile__" -DMAME_UNDERCLOCK -DMAME_FASTSOUND -DENABLE_AUTOFIRE -DBIGCASE
+ifeq "$(SUBTYPE)" "rs97"
+DEFS = -D__ODX__ -DLSB_FIRST -DALIGN_INTS -DALIGN_SHORTS -DINLINE="static inline" -Dasm="__asm__ __volatile__" -DMAME_UNDERCLOCK -DMAME_FASTSOUND -DENABLE_AUTOFIRE -DBIGCASE -DRS97
+else
+DEFS = -D__ODX__ -DLSB_FIRST -DALIGN_INTS -DALIGN_SHORTS -DINLINE="static inline" -Dasm="__asm__ __volatile__" -DMAME_UNDERCLOCK -DMAME_FASTSOUND -DENABLE_AUTOFIRE -DBIGCASE -DRS97
+endif
 
 W_OPTS = -Wall -Wno-write-strings -Wno-sign-compare -Wno-narrowing
 

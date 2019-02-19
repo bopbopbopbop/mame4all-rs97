@@ -22,8 +22,19 @@
 
 #include <SDL/SDL.h>
 
+#ifdef RS07
+
 #define ODX_SCREEN_WIDTH 480
 #define ODX_SCREEN_HEIGHT 272
+#endif
+
+#ifdef RS97
+	
+#define ODX_SCREEN_WIDTH 320
+#define ODX_SCREEN_HEIGHT 240
+	
+#endif
+
 
 #define odx_video_color8(C,R,G,B)  (odx_palette_rgb[C] = ((((R)&0xF8)<<8)|(((G)&0xFC)<<3)|(((B)&0xF8)>>3)))
 #define odx_video_color16(R,G,B,A) ((((R)&0xF8)<<8)|(((G)&0xFC)<<3)|(((B)&0xF8)>>3))
@@ -96,7 +107,7 @@ extern int abs_x, abs_y, abs_z;
 #define odx_video_wait_vsync()  { }
 #define odx_video_setpalette()  { }
 
-#define USE_DMA
+//#define USE_DMA
 
 #ifdef USE_DMA
 extern volatile uint16_t *dma_ptr;

@@ -5,6 +5,19 @@
 #include "artwork.h"
 #include "port_wrapper.h"
 
+#ifdef RS07
+
+#define SCREEN_WIDTH 480
+#define SCREEN_HEIGHT 272
+#endif
+
+#ifdef RS97
+	
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 240
+	
+#endif
+
 static struct RunningMachine machine;
 struct RunningMachine *Machine = &machine;
 static const struct GameDriver *gamedrv;
@@ -60,8 +73,8 @@ int run_game(int game)
 
 	//if (options.vector_width == 0) options.vector_width = 640;
 	//if (options.vector_height == 0) options.vector_height = 480;
-	if (options.vector_width == 0) options.vector_width = 320;
-	if (options.vector_height == 0) options.vector_height = 480;
+	if (options.vector_width == 0) options.vector_width = SCREEN_HEIGHT;
+	if (options.vector_height == 0) options.vector_height = SCREEN_WIDTH;
 
 	Machine->sample_rate = options.samplerate;
 

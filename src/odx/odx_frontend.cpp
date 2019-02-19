@@ -10,21 +10,46 @@
 
 #include "odx_frontend_list.h"
 
-#define SCREEN_WIDTH 480
-#define SCREEN_HEIGHT 272 
-//#define BMP_SIZE ((SCREEN_HEIGHT*SCREEN_WIDTH)+(256*4)+54)
-#define BMP_SIZE 131638
-
-#define Y_BOTTOM_LINE	260
-#define X_BUILD		(SCREEN_WIDTH - ((16 * 6)+2))
-
 #define Y_INCREMENT 12
 
-#define MAX_AMOUNT_OF_GAMES_ONSCREEN 16
+#ifdef RS07
 
+#define SCREEN_WIDTH 480
+#define SCREEN_HEIGHT 272 
+#define BMP_SIZE ((SCREEN_HEIGHT*SCREEN_WIDTH)+(256*4)+54)
+#define Y_BOTTOM_LINE (SCREEN_HEIGHT-Y_INCREMENT)
+
+#endif
+
+#ifdef RS97
+
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 240 
+#define BMP_SIZE ((SCREEN_HEIGHT*SCREEN_WIDTH)+(256*4)+54)
+#define Y_BOTTOM_LINE (SCREEN_HEIGHT-Y_INCREMENT)
+#endif
+
+
+#define X_BUILD		(SCREEN_WIDTH - ((16 * 6)+2))
+
+
+
+#define MAX_AMOUNT_OF_GAMES_ONSCREEN 14
+#define FILE_LIST_ROWS (MAX_AMOUNT_OF_GAMES_ONSCREEN - 4)
 #define COMPATCORES 1
 
+#ifdef RS07
+
 char frontend_build_version[] = "RS-07 V0.1";
+#endif
+
+#ifdef RS97
+
+char frontend_build_version[] = "RFW-97 V0.1";
+
+
+#endif
+
 
 static unsigned char splash_bmp[BMP_SIZE];
 static unsigned char menu_bmp[BMP_SIZE];
@@ -36,9 +61,9 @@ char playgame[16] = "builtinn\0";
 
 char mamedir[512];
 
-int odx_freq=336;       /* default dingoo Mhz */ 
+int odx_freq=600;       /* was 336, default dingoo Mhz */ 
 int odx_video_depth=16; /* MAME video depth */
-int odx_video_aspect=2; /* Scale best*/
+int odx_video_aspect=0; /* was 2, Scale best*/
 int odx_video_sync=0;   /* No vsync */
 int odx_frameskip=-1;
 int odx_sound = 2;
@@ -74,7 +99,16 @@ static void blit_bmp_8bpp(unsigned char *out, unsigned char *in)
 static void odx_intro_screen(void) {
 	char name[256];
 	FILE *f;
+	
+	
+	#ifdef RS07
 	sprintf(name,"skins/splash_RS07.bmp");
+	#endif
+	#ifdef RS97
+	sprintf(name,"skins/splash_RS97.bmp");
+	#endif
+	
+	
 	f=fopen(name,"rb");
 	if (f) {
 		fread(splash_bmp,1,BMP_SIZE,f);
@@ -84,12 +118,18 @@ static void odx_intro_screen(void) {
 
 	odx_gamelist_text_out(1,ODX_SCREEN_HEIGHT - Y_INCREMENT, frontend_build_version);
 	odx_gamelist_text_out(ODX_SCREEN_WIDTH - 99,Y_BOTTOM_LINE - (Y_INCREMENT * 2), "RS97 - bob_fossil");
-	odx_gamelist_text_out(ODX_SCREEN_WIDTH - (48 * 2),Y_BOTTOM_LINE - Y_INCREMENT, "RS07 - RANDOMIZE");
+	odx_gamelist_text_out(ODX_SCREEN_WIDTH - 101,Y_BOTTOM_LINE - Y_INCREMENT, "RFW97 - RANDOMIZE");
 
 	odx_video_flip();
 	odx_joystick_press();
 	
+	#ifdef RS07
 	sprintf(name,"skins/menu_RS07.bmp");
+	#endif
+	#ifdef RS97
+	sprintf(name,"skins/menu_RS97.bmp");
+	#endif
+	
 	f=fopen(name,"rb");
 	if (f) {
 		fread(menu_bmp,1,BMP_SIZE,f);
@@ -267,7 +307,7 @@ static int show_options(char *game)
 	unsigned long ExKey=0;
 	int selected_option=0;
 	int x_Pos = 41;
-	int y_PosTop = 116;
+	int y_PosTop = 80;
 	int y_Pos = y_PosTop;
 	int options_count = 9;
 	char text[512];
@@ -291,7 +331,7 @@ static int show_options(char *game)
 		blit_bmp_8bpp(od_screen8,menu_bmp);
 
 		/* draw text */
-		odx_gamelist_text_out( 4, 60,"Game Options");
+		odx_gamelist_text_out( 4, 40,"Game Options");
 		odx_gamelist_text_out( 4, Y_BOTTOM_LINE,"A=Select Game/Start  B=Back");
 		odx_gamelist_text_out( 268, Y_BOTTOM_LINE,"L+R=Exit");
 		odx_gamelist_text_out( X_BUILD,2,frontend_build_version);
@@ -895,7 +935,7 @@ void execute_game (char *playemu, char *playgame)
 //	execv(mame_args[0], args);
 }
  
-#define FILE_LIST_ROWS 10
+
 #define MAX_FILES 512
 typedef struct  {
 	char name[255];
@@ -983,7 +1023,7 @@ signed int get_romdir(char *result)
 		while(repeat && !want_exit) {
 			blit_bmp_8bpp(od_screen8,menu_bmp);
 			
-			odx_gamelist_text_out( 182, 60,"Select a ROM directory");
+			odx_gamelist_text_out( SCREEN_WIDTH - 138, 40,"Select a ROM directory");
 			odx_gamelist_text_out( 4, Y_BOTTOM_LINE - Y_INCREMENT,current_dir_short );
 			odx_gamelist_text_out( 4, Y_BOTTOM_LINE,"A=Enter dir START=Select dir");
 			odx_gamelist_text_out( SCREEN_WIDTH - 40, Y_BOTTOM_LINE,"B=Quit");
@@ -997,7 +1037,7 @@ signed int get_romdir(char *result)
 					if((current_filedir_number == current_filedir_selection))
 						print_buffer[0] = '>';
 					print_buffer[CHARLEN] = 0;
-					odx_gamelist_text_out(4, 62+((i + 2) * 16), print_buffer );
+					odx_gamelist_text_out(4, 40 + Y_INCREMENT +((i + 2) * Y_INCREMENT), print_buffer );
 				}
 			}
 			odx_video_flip();
