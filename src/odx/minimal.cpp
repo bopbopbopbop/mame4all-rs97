@@ -88,33 +88,77 @@ void odx_video_flip_single(void)
 	od_screen8=(unsigned char *) od_screen16;
 }
 
-unsigned int odx_joystick_read()
+unsigned int odx_joystick_read(unsigned int joy_num)
 {
   	unsigned int res=0;
-	//unsigned int32_t res=0;
 	
 	
-	SDL_PollEvent(&event);
-	keystates = SDL_GetKeyState(NULL);
+	if(joy_num == 0)
+	{
+		SDL_PollEvent(&event);
+		keystates = SDL_GetKeyState(NULL);
 
-	// Key touch management
-	if (keystates[SDLK_UP] == SDL_PRESSED)  res |=  OD_UP; // UP
-	if (keystates[SDLK_DOWN] == SDL_PRESSED) res |=  OD_DOWN; // DOWN
-	if (keystates[SDLK_LEFT] == SDL_PRESSED) res |=  OD_LEFT; // LEFT
-	if (keystates[SDLK_RIGHT] == SDL_PRESSED) res |=  OD_RIGHT; // RIGHT
+		// Key touch management
+		if (keystates[SDLK_UP] == SDL_PRESSED)  res |=  OD_UP; // UP
+		if (keystates[SDLK_DOWN] == SDL_PRESSED) res |=  OD_DOWN; // DOWN
+		if (keystates[SDLK_LEFT] == SDL_PRESSED) res |=  OD_LEFT; // LEFT
+		if (keystates[SDLK_RIGHT] == SDL_PRESSED) res |=  OD_RIGHT; // RIGHT
 
-	if (keystates[SDLK_LCTRL] == SDL_PRESSED) { res |=  OD_A;  }  // BUTTON A
-	if (keystates[SDLK_LALT] == SDL_PRESSED) { res |=  OD_B; }  // BUTTON B
+		if (keystates[SDLK_LCTRL] == SDL_PRESSED) { res |=  OD_A;  }  // BUTTON A
+		if (keystates[SDLK_LALT] == SDL_PRESSED) { res |=  OD_B; }  // BUTTON B
 
-	if (keystates[SDLK_SPACE] == SDL_PRESSED) { res |=  OD_X;  }  // BUTTON X
-	if (keystates[SDLK_LSHIFT] == SDL_PRESSED)  { res |=  OD_Y;  }   // BUTTON Y
+		if (keystates[SDLK_SPACE] == SDL_PRESSED) { res |=  OD_X;  }  // BUTTON X
+		if (keystates[SDLK_LSHIFT] == SDL_PRESSED)  { res |=  OD_Y;  }   // BUTTON Y
 
-	if (keystates[SDLK_BACKSPACE] == SDL_PRESSED)  { res |=  OD_R;  }  // BUTTON R
-	if (keystates[SDLK_TAB] == SDL_PRESSED)  { res |=  OD_L;  }  // BUTTON L
+		if (keystates[SDLK_BACKSPACE] == SDL_PRESSED)  { res |=  OD_R;  }  // BUTTON R
+		if (keystates[SDLK_TAB] == SDL_PRESSED)  { res |=  OD_L;  }  // BUTTON L
 
-	if ( (keystates[SDLK_RETURN] == SDL_PRESSED) )  { res |=  OD_START;  } // START
-	if ( (keystates[SDLK_ESCAPE] == SDL_PRESSED) ) { res |=  OD_SELECT; } // SELECT
-/*
+		if ( (keystates[SDLK_RETURN] == SDL_PRESSED) )  { res |=  OD_START;  } // START
+		if ( (keystates[SDLK_ESCAPE] == SDL_PRESSED) ) { res |=  OD_SELECT; } // SELECT
+	}
+	
+	#ifdef RS07
+	// manage joystick
+	
+	//code for three players
+	//else
+	//{
+		//joy_num -= 1;
+		if (joy[joy_num] == NULL)
+			joy[joy_num] = SDL_JoystickOpen(joy_num);
+				
+		if (SDL_JoystickGetAxis(joy[joy_num], 0) < -300)
+			res |= OD_LEFT;
+		if (SDL_JoystickGetAxis(joy[joy_num], 0) > 300)
+			res |= OD_RIGHT;
+				
+		if (SDL_JoystickGetAxis(joy[joy_num], 1) < -300)
+			res |= OD_UP;
+		if (SDL_JoystickGetAxis(joy[joy_num], 1) > 300)
+			res |= OD_DOWN;
+						
+		if (SDL_JoystickGetButton(joy[joy_num], 2)) res |= OD_B;
+		if (SDL_JoystickGetButton(joy[joy_num], 1)) res |= OD_A;
+		if (SDL_JoystickGetButton(joy[joy_num], 0)) res |= OD_X;
+		if (SDL_JoystickGetButton(joy[joy_num], 3)) res |= OD_Y;
+		if (SDL_JoystickGetButton(joy[joy_num], 4)) res |= OD_L;
+		if (SDL_JoystickGetButton(joy[joy_num], 5)) res |= OD_R;
+		// For some reasons, there are no buttons labelled 6 or 7. they went from 5 to 8..
+		if (SDL_JoystickGetButton(joy[joy_num], 8)) res |= OD_SELECT;
+		if (SDL_JoystickGetButton(joy[joy_num], 9)) res |= OD_START;
+		//
+		
+	//}
+	#endif
+		
+		
+	
+	
+	
+	
+	
+	
+	/*
 #ifdef _GCW0_
 	// manage joystick
 	if (odx_joyanalog) {
@@ -149,61 +193,15 @@ unsigned int odx_joystick_read()
 	}
 #endif
 */
-#ifdef RS07
-	// manage joystick
-	
-	//int multipler = 16;
-	int res_joy = 0;
-	
-	for(int i = 0; i < 2; i ++)
-	{
-		res_joy = 0;
-		if (joy[i]) {
-			if (!rotate_controls) {
-				axis_x = SDL_JoystickGetAxis(joy[i], 0)/256;
-				axis_y = SDL_JoystickGetAxis(joy[i], 1)/256;
-				if (axis_x < -32) { res_joy |=  OD_LEFT;  } // LEFT
-				if (axis_x > 32) { res_joy |=  OD_RIGHT; } // RIGHT
-				if (axis_y < -32) { res_joy |=  OD_UP;  } // UP
-				if (axis_y > 32) { res_joy |=  OD_DOWN;  } // DOWN
-			}
-			else {
-				axis_x = SDL_JoystickGetAxis(joy[i], 1)/256;
-				axis_y = SDL_JoystickGetAxis(joy[i], 0)/256;
-				if (axis_y < -32) res_joy |= OD_LEFT;
-				if (axis_y >  32) res_joy |= OD_RIGHT;
-				if (axis_x < -32) res_joy |= OD_UP;
-				if (axis_x >  32) res_joy |= OD_DOWN;
-			}
-			
-			if (SDL_JoystickGetButton(joy[i],0)) { res_joy |=  OD_A;  }  // BUTTON A
-			if (SDL_JoystickGetButton(joy[i],1)) { res_joy |=  OD_B; }  // BUTTON B
-
-			if (SDL_JoystickGetButton(joy[i],2)) { res_joy |=  OD_X;  }  // BUTTON X
-			if (SDL_JoystickGetButton(joy[i],3))  { res_joy |=  OD_Y;  }   // BUTTON Y
-
-			if (SDL_JoystickGetButton(joy[i],4))  { res_joy |=  OD_R;  }  // BUTTON R
-			if (SDL_JoystickGetButton(joy[i],5))  { res_joy |=  OD_L;  }  // BUTTON L
-
-			if (SDL_JoystickGetButton(joy[i],6))  { res_joy |=  OD_START;  } // START
-			if (SDL_JoystickGetButton(joy[i],7)) { res_joy |=  OD_SELECT; } // SELECT
-		}
-		
-		//res_joy >> multiplier;
-		res |= res_joy;
-		
-	}
-
-	#endif
 
 	return res;
 }
 
-unsigned int odx_joystick_press ()
+unsigned int odx_joystick_press (unsigned int joy_num)
 {
 	unsigned int ExKey=0;
-	while (odx_joystick_read() == 0 ) { odx_timer_delay(100); }
-	while (!(ExKey=odx_joystick_read() ==0 )) { }
+	while (odx_joystick_read(joy_num) == 0 ) { odx_timer_delay(100); }
+	while (!(ExKey=odx_joystick_read(joy_num) ==0 )) { }
 	return ExKey;
 }
 
@@ -346,13 +344,16 @@ void odx_init(int ticks_per_second, int bpp, int rate, int bits, int stereo, int
 	//if arcademini initialise joypads
 	#ifdef RS07
 	// Analog stick is off 
-	for(int i=0; i < 2; i ++)
+	
+	SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+	SDL_JoystickEventState(SDL_ENABLE);
+	
+	for(int i=0; i < 3; i ++)
 	{
 		joy[i] = NULL;
 		
 		// Just check joysticks
-		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
-		SDL_JoystickEventState(SDL_ENABLE);
+		
 		
 		joy[i]=SDL_JoystickOpen(i);
 		if (joy[i] == NULL )  {

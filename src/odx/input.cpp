@@ -138,15 +138,24 @@ static void updatekeyboard(void)
 	/* Start A == Start Button */
 	key[KEY_1]=( (ExKey1 & OD_START) && !(ExKey1 & OD_SELECT) && !(ExKey1 & OD_UP) && !(ExKey1 & OD_RIGHT) && !(ExKey1 & OD_DOWN) );
 	/* Start B == Joystick UP + Start Button */
-	key[KEY_2]=( ( (ExKey1 & OD_START) && !(ExKey1 & OD_SELECT) && (ExKey1 & OD_UP) && !(ExKey1 & OD_RIGHT) && !(ExKey1 & OD_DOWN) ) || (ExKey2 & OD_START));
+	//key[KEY_2]=( ( (ExKey1 & OD_START) && !(ExKey1 & OD_SELECT) && (ExKey1 & OD_UP) && !(ExKey1 & OD_RIGHT) && !(ExKey1 & OD_DOWN) ) || (ExKey2 & OD_START));
+	
+	key[KEY_2]= (ExKey2 & OD_START);
+	
+	
 	/* Start C == Joystick RIGHT + Start Button */
 	key[KEY_3]=( ( (ExKey1 & OD_START) && !(ExKey1 & OD_SELECT) && !(ExKey1 & OD_UP) && (ExKey1 & OD_RIGHT) && !(ExKey1 & OD_DOWN) ) || (ExKey3 & OD_START));
 	/* Start D == Joystick DOWN + Start Button */
 	key[KEY_4]=( ( (ExKey1 & OD_START) && !(ExKey1 & OD_SELECT) && !(ExKey1 & OD_UP) && !(ExKey1 & OD_RIGHT) && (ExKey1 & OD_DOWN) ) || (ExKey4 & OD_START));
 	/* Coin A == Select Button */
 	key[KEY_5]=( !(ExKey1 & OD_START) && (ExKey1 & OD_SELECT) && !(ExKey1 & OD_UP) && !(ExKey1 & OD_RIGHT) && !(ExKey1 & OD_DOWN) );
+	
+	
 	/* Coin B == Select Button + Joystick UP */	
-	key[KEY_6]=( ( !(ExKey1 & OD_START) && (ExKey1 & OD_SELECT) && (ExKey1 & OD_UP) && !(ExKey1 & OD_RIGHT) && !(ExKey1 & OD_DOWN) ) || (ExKey2 & OD_SELECT));
+	key[KEY_6]=(ExKey2 & OD_SELECT);
+	//key[KEY_6]=( ( !(ExKey1 & OD_START) && (ExKey1 & OD_SELECT) && (ExKey1 & OD_UP) && !(ExKey1 & OD_RIGHT) && !(ExKey1 & OD_DOWN) ) || (ExKey2 & OD_SELECT));
+	
+	
 	/* Coin C == Select Button + Joystick RIGHT */
 	key[KEY_7]=( ( !(ExKey1 & OD_START) && (ExKey1 & OD_SELECT) && !(ExKey1 & OD_UP) && (ExKey1 & OD_RIGHT) && !(ExKey1 & OD_DOWN) ) || (ExKey3 & OD_SELECT));
 	/* Coin D == Select Button + Joystick DOWN */
@@ -170,6 +179,46 @@ static void updatekeyboard(void)
 
 	/* Service mode*/
 	key[KEY_F2]=((ExKey1 & OD_L) && (ExKey1 & OD_A));
+	
+	
+	
+	//some dummy joypad keys
+	
+	key[KEY_D] = ExKey2 & OD_LEFT;
+	key[KEY_G] = ExKey2 & OD_RIGHT;
+	key[KEY_R] = ExKey2 & OD_UP;
+	key[KEY_F] = ExKey2 & OD_DOWN;
+	
+	key[KEY_A] = ExKey2 & OD_A;
+	key[KEY_S] = ExKey2 & OD_B;
+	key[KEY_Q] = ExKey2 & OD_X;
+	key[KEY_W] = ExKey2 & OD_Y;
+	key[KEY_I] = ExKey2 & OD_L;
+	key[KEY_K] = ExKey2 & OD_R;
+	key[KEY_J] = ExKey2 & OD_START;
+	key[KEY_L] = ExKey2 & OD_SELECT;
+	
+	
+	//to enable three seperate inputs
+	
+	key[KEY_N] = ExKey3 & OD_LEFT;
+	key[KEY_L] = ExKey3 & OD_RIGHT;
+	key[KEY_O] = ExKey3 & OD_UP;
+	key[KEY_P] = ExKey3 & OD_DOWN;
+	
+	key[KEY_Q] = ExKey3 & OD_A;
+	key[KEY_R] = ExKey3 & OD_B;
+	key[KEY_S] = ExKey3 & OD_X;
+	key[KEY_T] = ExKey3 & OD_Y;
+	key[KEY_U] = ExKey3 & OD_L;
+	key[KEY_V] = ExKey3 & OD_R;
+	key[KEY_W] = ExKey3 & OD_START;
+	key[KEY_X] = ExKey3 & OD_SELECT;
+	
+	
+	
+	
+	
 }
 
 int osd_is_key_pressed(int keycode)
@@ -318,6 +367,8 @@ static void init_joy_list(void)
 		joylist[tot].code = MOUSE_BUTTON(j+1);
 		tot++;
 	}
+
+	
 
 	for (i = 0;i < num_joysticks;i++)
 	{
@@ -524,9 +575,19 @@ int osd_is_joy_pressed(int joycode)
 	return 0;
 }
 
-static void poll_joystick(void)
+static void poll_joystick(int joy_num)
 {
-	ExKey1=odx_joystick_read();
+	switch (joy_num)
+		{
+			case 0: ExKey1=odx_joystick_read(joy_num); break;
+			case 1: ExKey2=odx_joystick_read(joy_num); break;
+			case 2: ExKey3=odx_joystick_read(joy_num); break;
+			//case 3: ExKey4=odx_joystick_read(joy_num);	 break;
+			default: break;
+		}
+		
+	
+	
 }
 
 void osd_poll_joysticks(void)
@@ -534,7 +595,17 @@ void osd_poll_joysticks(void)
 	updatekeyboard();
 
 	if (joystick > JOY_TYPE_NONE)
-		poll_joystick();
+	{
+		poll_joystick(0);
+	#ifdef RS07
+		poll_joystick(1);
+		poll_joystick(2);
+		//poll_joystick(3);
+		
+	#endif
+	}
+	
+	
 }
 
 /* return a value in the range -128 .. 128 (yes, 128, not 127) */

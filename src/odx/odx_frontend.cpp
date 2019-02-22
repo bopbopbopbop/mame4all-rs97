@@ -13,6 +13,16 @@
 #define Y_INCREMENT 12
 
 #ifdef RS07
+#define VERSION_NUMBER "RS-07 V0.3"
+
+#endif
+
+#ifdef RS97
+#define VERSION_NUMBER "RFW-97 V0.3"
+#endif
+
+
+#ifdef RS07
 
 #define SCREEN_WIDTH 480
 #define SCREEN_HEIGHT 272 
@@ -38,17 +48,9 @@
 #define FILE_LIST_ROWS (MAX_AMOUNT_OF_GAMES_ONSCREEN - 4)
 #define COMPATCORES 1
 
-#ifdef RS07
-
-char frontend_build_version[] = "RS-07 V0.1";
-#endif
-
-#ifdef RS97
-
-char frontend_build_version[] = "RFW-97 V0.1";
+#define JOY_NUM 0
 
 
-#endif
 
 
 static unsigned char splash_bmp[BMP_SIZE];
@@ -116,12 +118,19 @@ static void odx_intro_screen(void) {
 	}
 	blit_bmp_8bpp(od_screen8,splash_bmp);
 
-	odx_gamelist_text_out(1,ODX_SCREEN_HEIGHT - Y_INCREMENT, frontend_build_version);
-	odx_gamelist_text_out(ODX_SCREEN_WIDTH - 99,Y_BOTTOM_LINE - (Y_INCREMENT * 2), "RS97 - bob_fossil");
-	odx_gamelist_text_out(ODX_SCREEN_WIDTH - 101,Y_BOTTOM_LINE - Y_INCREMENT, "RFW97 - RANDOMIZE");
+	odx_gamelist_text_out(1,ODX_SCREEN_HEIGHT - Y_INCREMENT, VERSION_NUMBER);
+	odx_gamelist_text_out(ODX_SCREEN_WIDTH - 110,Y_BOTTOM_LINE - (Y_INCREMENT * 2), "RS97 - bob_fossil");
+	
+	#ifdef RS07
+	odx_gamelist_text_out(ODX_SCREEN_WIDTH - 110,Y_BOTTOM_LINE - Y_INCREMENT, "RFW 97 - RANDOMIZE");
+	#endif
+	#ifdef RS97
+	odx_gamelist_text_out(ODX_SCREEN_WIDTH - 110,Y_BOTTOM_LINE - Y_INCREMENT, "RS07 - RANDOMIZE");
+	#endif
+	
 
 	odx_video_flip();
-	odx_joystick_press();
+	odx_joystick_press(JOY_NUM);
 	
 	#ifdef RS07
 	sprintf(name,"skins/menu_RS07.bmp");
@@ -233,7 +242,7 @@ static void game_list_view(int *pos) {
 	odx_gamelist_text_out( 4, 32,"Select ROM");
 	odx_gamelist_text_out( 4, Y_BOTTOM_LINE,"A=Select Game/Start  B=Select Rom folder");
 	odx_gamelist_text_out( SCREEN_WIDTH - 52, Y_BOTTOM_LINE,"L+R=Exit");
-	odx_gamelist_text_out( X_BUILD,2,frontend_build_version);
+	odx_gamelist_text_out( X_BUILD,2,VERSION_NUMBER);
 
 	/* Check Limits */
 	if (*pos<0)
@@ -334,7 +343,7 @@ static int show_options(char *game)
 		odx_gamelist_text_out( 4, 40,"Game Options");
 		odx_gamelist_text_out( 4, Y_BOTTOM_LINE,"A=Select Game/Start  B=Back");
 		odx_gamelist_text_out( 268, Y_BOTTOM_LINE,"L+R=Exit");
-		odx_gamelist_text_out( X_BUILD,2,frontend_build_version);
+		odx_gamelist_text_out( X_BUILD,2,VERSION_NUMBER);
 
 		/* Draw the options */
 		strncpy (text,game_list_description(last_game_selected),33);
@@ -446,8 +455,8 @@ static int show_options(char *game)
 		odx_gamelist_text_out(x_Pos-16,y_PosTop+(selected_option*Y_INCREMENT)+Y_INCREMENT," >");
 
 		odx_video_flip();
-		while (odx_joystick_read()) { odx_timer_delay(100); }
-		while(!(ExKey=odx_joystick_read())) { }
+		while (odx_joystick_read(JOY_NUM)) { odx_timer_delay(100); }
+		while(!(ExKey=odx_joystick_read(JOY_NUM))) { }
 		if(ExKey & OD_DOWN){
 			selected_option++;
 			selected_option = selected_option % options_count;
@@ -648,9 +657,9 @@ static void select_game(char *emu, char *game)
 		game_list_view(&last_game_selected);
 		odx_video_flip();
 
-		if( (odx_joystick_read())) odx_timer_delay(100);
+		if( (odx_joystick_read(JOY_NUM))) odx_timer_delay(100);
 
-		while(!(ExKey=odx_joystick_read())) { 
+		while(!(ExKey=odx_joystick_read(JOY_NUM))) { 
 		}
 
 		if ((ExKey & OD_L) && (ExKey & OD_R) )
@@ -1027,7 +1036,7 @@ signed int get_romdir(char *result)
 			odx_gamelist_text_out( 4, Y_BOTTOM_LINE - Y_INCREMENT,current_dir_short );
 			odx_gamelist_text_out( 4, Y_BOTTOM_LINE,"A=Enter dir START=Select dir");
 			odx_gamelist_text_out( SCREEN_WIDTH - 40, Y_BOTTOM_LINE,"B=Quit");
-			odx_gamelist_text_out( X_BUILD,2,frontend_build_version);
+			odx_gamelist_text_out( X_BUILD,2,VERSION_NUMBER);
 			
 			for(i = 0, current_filedir_number = i + current_filedir_scroll_value; i < FILE_LIST_ROWS; i++, current_filedir_number++) {
 #define CHARLEN ((320/6)-2)
@@ -1043,8 +1052,8 @@ signed int get_romdir(char *result)
 			odx_video_flip();
 
 			// Catch input
-			while ( (odx_joystick_read())) odx_timer_delay(100);
-			while(!(ExKey=odx_joystick_read())) { 
+			while ( (odx_joystick_read(JOY_NUM))) odx_timer_delay(100);
+			while(!(ExKey=odx_joystick_read(JOY_NUM))) { 
 			}
 
 			/* L + R = Exit */
@@ -1164,7 +1173,7 @@ int do_frontend ()
 
 	odx_clear_video();
 
-	while(odx_joystick_read()) { odx_timer_delay(100); }
+	while(odx_joystick_read(JOY_NUM)) { odx_timer_delay(100); }
 
 	gethomedir();
 	
@@ -1194,7 +1203,7 @@ int do_frontend ()
 				odx_gamelist_text_out(10, 20, "Error: No available games found !");
 				odx_gamelist_text_out(10, 40, "Press a key to select a rom directory");
 				odx_video_flip();
-				odx_joystick_press();
+				odx_joystick_press(JOY_NUM);
 				// !!!
 				if (get_romdir(romdir) == -1)
 				{

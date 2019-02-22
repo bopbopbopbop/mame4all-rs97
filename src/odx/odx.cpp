@@ -386,7 +386,7 @@ int main (int argc, char **argv)
 					logerror("Waiting for keypress...\n");
 					/* wait a key press */
 					odx_video_flip_single();
-					odx_joystick_press();
+					odx_joystick_press(0);
 				}
 
 			game_index = -1;

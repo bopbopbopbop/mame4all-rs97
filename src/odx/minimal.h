@@ -83,8 +83,8 @@ extern void odx_video_flip_double(void);
 extern void odx_video_wait_vsync(void);
 extern void odx_video_setpalette(void);
 
-extern unsigned int odx_joystick_read();
-extern unsigned int odx_joystick_press();
+extern unsigned int odx_joystick_read(unsigned int joy_num);
+extern unsigned int odx_joystick_press(unsigned int joy_num);
 
 extern void odx_sound_volume(int vol);
 
