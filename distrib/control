@@ -1,0 +1,10 @@
+Package: Mame4All
+Version: 0.1.1
+Description: Mame (Multiple Arcade Machine Emulator) 0.37b5
+Section: emu
+Priority: optional
+Maintainer: RANDOMIZE
+Architecture: mipsel
+Homepage: https://github.com/bopbopbopbop/mame4all-RS97
+Depends:
+Source: https://github.com/bopbopbopbop/mame4all-RS97

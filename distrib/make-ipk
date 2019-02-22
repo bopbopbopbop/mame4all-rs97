@@ -1,0 +1,15 @@
+
+#clean up
+rm control.tar.gz
+rm mame4all.dge
+rm data.tar.gz
+
+#presume compile has already happened the new build over to the right place in the directory
+
+
+#create the tars
+tar -czvf control.tar.gz control conffiles
+tar -czvf data.tar.gz home
+
+#bundle
+ar rv mame4all.ipk control.tar.gz data.tar.gz debian-binary

@@ -53,6 +53,12 @@ unsigned char			odx_keys[OD_KEY_MAX];
 //#ifdef _GCW0_
 //SDL_Joystick			*odx_joyanalog;
 //#endif
+#ifdef RS07
+SDL_Joystick			*joy[2];
+#endif
+
+
+
 
 extern int master_volume;
 
@@ -85,6 +91,8 @@ void odx_video_flip_single(void)
 unsigned int odx_joystick_read()
 {
   	unsigned int res=0;
+	//unsigned int32_t res=0;
+	
 	
 	SDL_PollEvent(&event);
 	keystates = SDL_GetKeyState(NULL);
@@ -141,6 +149,53 @@ unsigned int odx_joystick_read()
 	}
 #endif
 */
+#ifdef RS07
+	// manage joystick
+	
+	//int multipler = 16;
+	int res_joy = 0;
+	
+	for(int i = 0; i < 2; i ++)
+	{
+		res_joy = 0;
+		if (joy[i]) {
+			if (!rotate_controls) {
+				axis_x = SDL_JoystickGetAxis(joy[i], 0)/256;
+				axis_y = SDL_JoystickGetAxis(joy[i], 1)/256;
+				if (axis_x < -32) { res_joy |=  OD_LEFT;  } // LEFT
+				if (axis_x > 32) { res_joy |=  OD_RIGHT; } // RIGHT
+				if (axis_y < -32) { res_joy |=  OD_UP;  } // UP
+				if (axis_y > 32) { res_joy |=  OD_DOWN;  } // DOWN
+			}
+			else {
+				axis_x = SDL_JoystickGetAxis(joy[i], 1)/256;
+				axis_y = SDL_JoystickGetAxis(joy[i], 0)/256;
+				if (axis_y < -32) res_joy |= OD_LEFT;
+				if (axis_y >  32) res_joy |= OD_RIGHT;
+				if (axis_x < -32) res_joy |= OD_UP;
+				if (axis_x >  32) res_joy |= OD_DOWN;
+			}
+			
+			if (SDL_JoystickGetButton(joy[i],0)) { res_joy |=  OD_A;  }  // BUTTON A
+			if (SDL_JoystickGetButton(joy[i],1)) { res_joy |=  OD_B; }  // BUTTON B
+
+			if (SDL_JoystickGetButton(joy[i],2)) { res_joy |=  OD_X;  }  // BUTTON X
+			if (SDL_JoystickGetButton(joy[i],3))  { res_joy |=  OD_Y;  }   // BUTTON Y
+
+			if (SDL_JoystickGetButton(joy[i],4))  { res_joy |=  OD_R;  }  // BUTTON R
+			if (SDL_JoystickGetButton(joy[i],5))  { res_joy |=  OD_L;  }  // BUTTON L
+
+			if (SDL_JoystickGetButton(joy[i],6))  { res_joy |=  OD_START;  } // START
+			if (SDL_JoystickGetButton(joy[i],7)) { res_joy |=  OD_SELECT; } // SELECT
+		}
+		
+		//res_joy >> multiplier;
+		res |= res_joy;
+		
+	}
+
+	#endif
+
 	return res;
 }
 
@@ -287,6 +342,30 @@ void odx_init(int ticks_per_second, int bpp, int rate, int bits, int stereo, int
 		fprintf(stderr, "Couldn't set video mode: %s\n", SDL_GetError());
 		exit(1);
 	}
+	
+	//if arcademini initialise joypads
+	#ifdef RS07
+	// Analog stick is off 
+	for(int i=0; i < 2; i ++)
+	{
+		joy[i] = NULL;
+		
+		// Just check joysticks
+		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+		SDL_JoystickEventState(SDL_ENABLE);
+		
+		joy[i]=SDL_JoystickOpen(i);
+		if (joy[i] == NULL )  {
+			fprintf(stderr, "Couldn't set analog stick : %s\n", SDL_GetError());
+			//exit(1);
+		}
+	}
+	#endif
+	
+	
+	
+	
+	
 /*
 #ifdef _GCW0_
 	// Analog stick is off 

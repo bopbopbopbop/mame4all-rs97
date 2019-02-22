@@ -2,8 +2,8 @@
 #OSTYPE=msys
 #OSTYPE=oda320
 OSTYPE=gcw0
-#SUBTYPE=RS07
-SUBTYPE=RS97
+SUBTYPE=RS07
+#SUBTYPE=RS97
 
 ifeq ($(TARGET),)
 TARGET = mame
@@ -28,19 +28,27 @@ TOOLCHAIN = /c/MinGW32
 CC          = $(TOOLCHAIN)/bin/gcc
 CPP         = $(TOOLCHAIN)/bin/gcc
 LD          = $(TOOLCHAIN)/bin/gcc
-else
+endif
 
 ifeq "$(OSTYPE)" "gcw0"	
 TOOLCHAIN = /opt/buildroot-2018.02.9/output/host/
+
+ifeq "$(SUBTYPE)" "RS97"
+TOOLCHAIN = /opt/buildroot-2018.02.9/output/host/
+CC = $(TOOLCHAIN)bin/mipsel-buildroot-linux-uclibc-gcc
+CPP = $(TOOLCHAIN)bin/mipsel-buildroot-linux-uclibc-g++
+LD = $(TOOLCHAIN)bin/mipsel-buildroot-linux-uclibc-gcc
+else
+TOOLCHAIN = /opt/buildroot-musl/output/host/
+CC = $(TOOLCHAIN)bin/mipsel-buildroot-linux-musl-gcc
+CPP = $(TOOLCHAIN)bin/mipsel-buildroot-linux-musl-g++
+LD = $(TOOLCHAIN)bin/mipsel-buildroot-linux-musl-gcc
+endif
+
 else
 TOOLCHAIN = /opt/buildroot-2018.02.9/output/host/
 endif
 
-
-CC = $(TOOLCHAIN)bin/mipsel-buildroot-linux-uclibc-gcc
-CPP = $(TOOLCHAIN)bin/mipsel-buildroot-linux-uclibc-g++
-LD = $(TOOLCHAIN)bin/mipsel-buildroot-linux-uclibc-gcc
-endif
 
 MD = @mkdir
 RM = @rm -f
@@ -50,6 +58,8 @@ DEVLIBS =
 
 EMULATOR = $(TARGET)$(EXE)
 
+ifeq "$(OSTYPE)" "gcw0"	
+
 ifeq "$(SUBTYPE)" "RS97"
 DEFS = -D__ODX__ -DLSB_FIRST -DALIGN_INTS -DALIGN_SHORTS -DINLINE="static inline" -Dasm="__asm__ __volatile__" -DMAME_UNDERCLOCK -DMAME_FASTSOUND -DENABLE_AUTOFIRE -DBIGCASE -DRS97
 else
@@ -57,6 +67,9 @@ DEFS = -D__ODX__ -DLSB_FIRST -DALIGN_INTS -DALIGN_SHORTS -DINLINE="static inline
 endif
 
 W_OPTS = -Wall -Wno-write-strings -Wno-sign-compare -Wno-narrowing
+
+endif
+
 
 ifeq "$(OSTYPE)" "msys"
 F_OPTS = -fomit-frame-pointer -ffunction-sections -ffast-math -fsingle-precision-constant -fsigned-char -fpermissive
@@ -109,7 +122,15 @@ CDEFS = $(DEFS) $(COREDEFS) $(CPUDEFS) $(SOUNDDEFS)
 
 $(EMULATOR): $(COREOBJS) $(OSOBJS) $(DRVOBJS)
 	$(LD) $(LDFLAGS) $(COREOBJS) $(OSOBJS) $(LIBS) $(DRVOBJS) -o $@
-	$(MV) $(EMULATOR) distrib/mame4all/mame4all.dge
+	
+
+ifeq "$(SUBTYPE)" "RS97"
+	$(MV) $(EMULATOR) distrib/home/retrofw/emus/mame4all/$(EMULATOR)4all.dge
+else
+	$(MV) $(EMULATOR) distrib/rs07/mame4all/$(EMULATOR)4all.dge
+endif	
+	
+
 
 $(EMULATOR).dge: $(FEOBJS)
 	@echo Linking $@ ...
@@ -117,7 +138,13 @@ $(EMULATOR).dge: $(FEOBJS)
 ifeq "$(OSTYPE)" "msys"
 	$(MV) $(EMULATOR).dge distrib/mame4all/$(EMULATOR).dge.exe
 else
-	$(MV) $(EMULATOR).dge distrib/mame4all/$(EMULATOR).dge
+
+ifeq "$(SUBTYPE)" "RS97"
+	$(MV) $(EMULATOR) distrib/home/retrofw/emus/mame4all/$(EMULATOR).dge
+else
+	$(MV) $(EMULATOR) distrib/rs07/mame4all/$(EMULATOR).dge
+endif
+	
 endif
 
 $(OBJ)/%.o: src/%.c
@@ -144,3 +171,4 @@ maketree: $(sort $(OBJDIRS))
 clean:
 	$(RM) -r $(OBJ)
 	$(RM) $(EMULATOR)
+

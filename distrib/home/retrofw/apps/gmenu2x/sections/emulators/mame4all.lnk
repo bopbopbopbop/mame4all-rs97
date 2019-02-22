@@ -1,0 +1,3 @@
+title=mame4all
+exec=/home/retrofw/emus/mame4all/mame4all.dge
+clock=600
