@@ -8,8 +8,8 @@ rm data.tar.gz
 
 
 #create the tars
-tar -czvf control.tar.gz control conffiles
-tar -czvf data.tar.gz home
+tar -czvf control.tar.gz --owner=0 --group=0 control conffiles
+tar -czvf data.tar.gz --owner=0 --group=0 home
 
 #bundle
 ar rv mame4all.ipk control.tar.gz data.tar.gz debian-binary

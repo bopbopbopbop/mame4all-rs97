@@ -72,6 +72,11 @@ extern int						rotate_controls;
 extern SDL_Joystick				*odx_joyanalog;
 #endif
 
+#ifdef RS07
+extern SDL_Joystick				*joy[2];
+#endif
+
+
 extern void odx_video_flip(void);
 extern void odx_video_flip_single(void);
 extern void odx_video_flip_double(void);
