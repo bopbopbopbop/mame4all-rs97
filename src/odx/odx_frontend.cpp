@@ -13,12 +13,12 @@
 #define Y_INCREMENT 12
 
 #ifdef RS07
-#define VERSION_NUMBER "RS-07 V0.3"
+#define VERSION_NUMBER "RS-07 V0.4"
 
 #endif
 
 #ifdef RS97
-#define VERSION_NUMBER "RFW-97 V0.3"
+#define VERSION_NUMBER "RFW-97 V0.4"
 #endif
 
 
@@ -122,10 +122,10 @@ static void odx_intro_screen(void) {
 	odx_gamelist_text_out(ODX_SCREEN_WIDTH - 110,Y_BOTTOM_LINE - (Y_INCREMENT * 2), "RS97 - bob_fossil");
 	
 	#ifdef RS07
-	odx_gamelist_text_out(ODX_SCREEN_WIDTH - 110,Y_BOTTOM_LINE - Y_INCREMENT, "RFW 97 - RANDOMIZE");
+	odx_gamelist_text_out(ODX_SCREEN_WIDTH - 110,Y_BOTTOM_LINE - Y_INCREMENT, "RS07 - RANDOMIZE");
 	#endif
 	#ifdef RS97
-	odx_gamelist_text_out(ODX_SCREEN_WIDTH - 110,Y_BOTTOM_LINE - Y_INCREMENT, "RS07 - RANDOMIZE");
+	odx_gamelist_text_out(ODX_SCREEN_WIDTH - 110,Y_BOTTOM_LINE - Y_INCREMENT, "RFW-97 - RANDOMIZE");
 	#endif
 	
 

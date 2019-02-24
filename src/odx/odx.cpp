@@ -165,6 +165,9 @@ int main (int argc, char **argv)
 						playbackname = margv[i];
 					}
 				}
+				
+				//temp bits
+				video_scale=3;
 
 			res = frontend_help(margc, margv);
 
