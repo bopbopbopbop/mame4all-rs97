@@ -45,6 +45,7 @@
 
 
 #define MAX_AMOUNT_OF_GAMES_ONSCREEN 14
+#define PAGE_SKIP (MAX_AMOUNT_OF_GAMES_ONSCREEN * 4)
 #define FILE_LIST_ROWS (MAX_AMOUNT_OF_GAMES_ONSCREEN - 4)
 #define COMPATCORES 1
 
@@ -663,16 +664,22 @@ static void select_game(char *emu, char *game)
 		}
 
 		if ((ExKey & OD_L) && (ExKey & OD_R) )
-			{
+		{
 			odx_save_config();
 			odx_exit("");
 			want_exit = true;
-			}
+		}
+		else
+		{
+			if (ExKey & OD_L) last_game_selected-=PAGE_SKIP;
+			if (ExKey & OD_R) last_game_selected+=PAGE_SKIP;
+			
+		}
 		if (ExKey & OD_UP) last_game_selected--;
 		if (ExKey & OD_DOWN) last_game_selected++;
 		if (ExKey & OD_LEFT) last_game_selected-=MAX_AMOUNT_OF_GAMES_ONSCREEN; // ALEK 21
 		if (ExKey & OD_RIGHT) last_game_selected+=MAX_AMOUNT_OF_GAMES_ONSCREEN; // ALEK 21
-
+		
 		if ((ExKey & OD_A) || (ExKey & OD_START) )
 		{
 			/* Select the game */
