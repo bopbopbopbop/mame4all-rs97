@@ -132,6 +132,8 @@ int main (int argc, char **argv)
 				{
 				if (strcasecmp(margv[i],"-fame") == 0)
 					use_fame=1;
+				if (strcasecmp(margv[i],"-unscaled") == 0)
+					video_scale=0;
 				if (strcasecmp(margv[i],"-horizscale") == 0)
 					video_scale=1;
 				if (strcasecmp(margv[i],"-halfscale") == 0)
@@ -166,8 +168,7 @@ int main (int argc, char **argv)
 					}
 				}
 				
-				//temp bits
-				video_scale=3;
+			
 
 			res = frontend_help(margc, margv);
 

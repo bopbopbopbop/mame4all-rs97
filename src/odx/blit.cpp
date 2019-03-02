@@ -376,7 +376,12 @@ INLINE void blitscreen_dirty0_color8_fitscale_merge0(struct osd_bitmap *bitmap)
 void blitscreen_dirty0_color8(struct osd_bitmap *bitmap)
 {
 	if (SDL_MUSTLOCK(video)) SDL_LockSurface(video);
-	if (video_scale == 1) /* Horizontal Only */
+	if(video_scale == 0)
+	{		//unscaled
+			blitscreen_dirty0_color8_noscale(bitmap);
+		
+	}	
+	else if (video_scale == 1) /* Horizontal Only */
 	{
 		blitscreen_dirty0_color8_horzscale(bitmap);
 	}
@@ -786,6 +791,11 @@ void blitscreen_dirty0_palettized16(struct osd_bitmap *bitmap)
 #endif
 	switch(video_scale)
 		{
+		case 0:		//unscaled
+			blitscreen_dirty0_palettized16_noscale(bitmap);
+		break;	
+			
+			
 		case 1:		// Horizontal Only
 			blitscreen_dirty0_palettized16_horzscale(bitmap);
 			break;
@@ -1199,6 +1209,10 @@ void blitscreen_dirty0_color16(struct osd_bitmap *bitmap)
 
 	switch(video_scale)
 		{
+		case 0:		//unscaled
+			blitscreen_dirty0_color16_noscale(bitmap);
+		break;		
+			
 		case 1:		// Horizontal Only
 			blitscreen_dirty0_color16_horzscale(bitmap);
 			break;

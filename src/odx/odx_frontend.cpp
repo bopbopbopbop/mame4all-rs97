@@ -13,12 +13,12 @@
 #define Y_INCREMENT 12
 
 #ifdef RS07
-#define VERSION_NUMBER "RS-07 V0.4"
+#define VERSION_NUMBER "RS-07 V0.4.1"
 
 #endif
 
 #ifdef RS97
-#define VERSION_NUMBER "RFW-97 V0.4"
+#define VERSION_NUMBER "RFW-97 V0.4.1"
 #endif
 
 
@@ -364,9 +364,9 @@ static int show_options(char *game)
 		y_Pos += Y_INCREMENT;
 		switch (odx_video_aspect)
 		{
-			case 0: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Normal"); break;
-			case 1: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Aspect"); break;
-			case 2: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Aspect Fast"); break;
+			case 0: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Unscaled"); break;
+			case 1: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Aspect - Downscale"); break;
+			case 2: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Aspect - Upscale"); break;
 			case 3: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Fast"); break;
 			case 4: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Full Screen"); break;
 			case 5: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Normal"); break;
@@ -749,10 +749,16 @@ void execute_game (char *playemu, char *playgame)
 	// odx_video_aspect
 	switch(odx_video_aspect)
 		{
+		case 0:
+			{
+			mame_args[margc]="-unscaled"; margc++;
+			}		
+			break;
+			
 		case 1:
 			{
 			// Scale aspect.
-			mame_args[margc]="-aspect"; margc++;
+			mame_args[margc]="-bestscale"; margc++; //was -aspect
 			}
 			break;
 
@@ -766,7 +772,7 @@ void execute_game (char *playemu, char *playgame)
 		case 3:
 		case 8:
 			{
-			mame_args[margc]="-aspect"; margc++;
+			mame_args[margc]="-aspect"; margc++; 
 			}
 			break;
 
