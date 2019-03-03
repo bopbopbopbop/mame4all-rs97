@@ -13,12 +13,12 @@
 #define Y_INCREMENT 12
 
 #ifdef RS07
-#define VERSION_NUMBER "RS-07 V0.4.1"
+#define VERSION_NUMBER "RS-07 V0.4.2"
 
 #endif
 
 #ifdef RS97
-#define VERSION_NUMBER "RFW-97 V0.4.1"
+#define VERSION_NUMBER "RFW-97 V0.4.2"
 #endif
 
 
