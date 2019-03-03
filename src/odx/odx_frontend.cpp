@@ -369,11 +369,11 @@ static int show_options(char *game)
 			case 2: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Aspect - Upscale"); break;
 			case 3: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Fast"); break;
 			case 4: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Full Screen"); break;
-			case 5: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Normal"); break;
+			case 5: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Unscaled"); break;
 			case 6: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Scale Horiz"); break;
 			case 7: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Best"); break;
 			case 8: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Fast"); break;
-			case 9: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Double Scanlines"); break;
+			case 9: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Fullscreen"); break;
 			case 10: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Double Vertical"); break;
 		}
 		
@@ -803,32 +803,40 @@ void execute_game (char *playemu, char *playgame)
 			break;
 
 		case 3:
+			{
+			mame_args[margc]="-aspect"; margc++; 
+			}
+			break;
+		
+		case 4:
+			{ //fullscreen
+			mame_args[margc]="-fullscreen"; margc++;
+			}
+			break;
+		case 5:
+			{ //rotate normal
+			mame_args[margc]="-unscaled"; margc++;
+			}		
+			break;
+		case 6:
+			{
+			// rotate Scale aspect.
+			mame_args[margc]="-bestscale"; margc++; //was -aspect
+			}
+			break;
+		case 7:
+			{
+			// rotate Scale aspect fast.
+			mame_args[margc]="-fastaspect"; margc++;
+			}
+			break;
 		case 8:
 			{
 			mame_args[margc]="-aspect"; margc++; 
 			}
 			break;
-
-		case 4:
-			{
-			mame_args[margc]="-fastaspect"; margc++;
-			}
-			break;
-
-//		case 6:
-//			{
-//			mame_args[margc]="-verticalscale"; margc++;
-//			}
-//			break;
-
-		case 7:
-			{
-			mame_args[margc]="-aspect"; margc++;
-			}
-			break;
-
 		case 9:
-			{
+			{ //rotate fullscreen
 			mame_args[margc]="-scandouble"; margc++;
 			}
 			break;
@@ -843,7 +851,7 @@ void execute_game (char *playemu, char *playgame)
 
 	mame_args[margc]="-nodirty"; margc++;
 
-	if ((odx_video_aspect>=5) && (odx_video_aspect<=8))
+	if ((odx_video_aspect>=5) && (odx_video_aspect<=9))
 	{
 		mame_args[margc]="-rotatecontrols"; margc++;
 		mame_args[margc]="-ror"; margc++;
