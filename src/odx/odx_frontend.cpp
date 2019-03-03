@@ -624,6 +624,21 @@ void odx_load_config(void) {
 		&odx_frameskip,&odx_sound,&odx_clock_cpu,&odx_clock_sound,&odx_cpu_cores,&odx_ramtweaks,&last_game_selected,&odx_cheat,romdir);
 		fclose(f);
 	}
+	
+	//also load rom dir
+	//added
+	FILE* filesave;
+	char text[512];
+	snprintf(text, sizeof(text), "%s/cfg/romsave.txt", mamedir); 
+
+	filesave = fopen(text, "r");
+	if (filesave)
+	{
+		fscanf(filesave, romdir);
+		fclose(filesave);
+	}
+	
+	//end of added
 }
 
 void odx_save_config(void) {
@@ -639,6 +654,24 @@ void odx_save_config(void) {
 		fclose(f);
 		//fsync(f);
 	}
+	
+	//added
+	FILE* filesave;
+	char text[512];
+	snprintf(text, sizeof(text), "%s/cfg/romsave.txt", mamedir); 
+
+	if (game_num_avail > 0)
+	{
+		printf("\nSaving rom directory %s to %s\n", romdir, text);
+
+		filesave = fopen(text, "w+");
+		if (filesave)
+		{
+			fprintf(filesave, romdir);
+			fclose(filesave);
+		}
+	}
+	//end of added
 }
 
 static void select_game(char *emu, char *game)
@@ -1154,10 +1187,10 @@ void gethomedir() {
 
 	snprintf(text, sizeof(text), "%s/cfg/romsave.txt",mamedir); 
 
-	filesave = fopen(text, "r+");
+	filesave = fopen(text, "r");
 	if (filesave)
 	{
-		fread(romdir, 512, 1, filesave);
+		fscanf(filesave, romdir);
 		fclose(filesave);
 	}
 		
