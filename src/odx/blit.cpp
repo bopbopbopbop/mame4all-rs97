@@ -945,26 +945,35 @@ INLINE void blitscreen_dirty0_color16_aspect_fast(struct osd_bitmap *bitmap)
 	int y,x;
 	int width=(bitmap->line[1] - bitmap->line[0])>>1;
 	int columns=gfx_display_columns<<1;
-	unsigned short *lb = ((unsigned short*)(bitmap->line[skiplines])) + skipcolumns, *bitmap_line;
+	unsigned short *lb = ((unsigned short*)(bitmap->line[skiplines])) + skipcolumns; //offset to start drawing at
+	unsigned short *bitmap_line;
 	register unsigned short *address = blit_dest;
 
 	int source_line = 0;
-	bool copy_line = gfx_display_columns < gfx_width ? true : false;
+	//bool copy_line = gfx_display_columns < gfx_width ? true : false;
+
+	
+	int adjusted_width = gfx_width - (gfx_xoffset * 2);
+	
 
 	for(y = 0; y < gfx_height; y ++)
 	{
 		source_line = y_aspect_lookup[y];
-		if(copy_line)
-			{
-			memcpy(address, lb + (source_line * width), columns);
-			}
-		else
-			{
-			bitmap_line = lb + (source_line * width);
+		//if(copy_line)
+		//{
+		//	memcpy(address, lb + (source_line * width), columns);
+		//}
+		//else
+		//{
+			bitmap_line = lb + (source_line * (width));
+			
 
-			for(x = 0; x < gfx_width; x++)
+			for(x = 0; x < adjusted_width; x++)
+			{
+				
 				address[x] = bitmap_line[x_aspect_lookup[x]];
 			}
+		//}
 		address+=gfx_width;
 	}
 }

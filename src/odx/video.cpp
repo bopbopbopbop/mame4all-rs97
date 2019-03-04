@@ -384,7 +384,7 @@ logerror("video_scale %d\n",video_scale);
 			break;
 
 		case 3:		// bestscale
-		case 4:		// fastscale
+		case 4:		// fastscale //RANDOMIZE change
 			{
 			gfx_display_lines = visheight;
 			gfx_display_columns = viswidth;
@@ -415,20 +415,28 @@ logerror("video_scale %d\n",video_scale);
 				visheight = gfx_height;
 
 			gfx_display_lines = visheight;
-			gfx_display_columns = viswidth;
-
-			gfx_xoffset = (gfx_width - viswidth * xmultiply) / 2;
-			gfx_yoffset = 0;//(gfx_height - visheight * ymultiply) / 2;
+			gfx_display_columns = viswidth; 
 
 			// Generate aspect scaling lookups.
-			float gfx_x_aspect = (float)gfx_display_columns / (float)gfx_width;
+			//float gfx_x_aspect = (float)gfx_display_columns / (float)gfx_width;
 			float gfx_y_aspect = (float)gfx_display_lines / (float)gfx_height;
 
+			//recalculate viswidth
+			viswidth = viswidth * gfx_y_aspect;
+			
+			
 			for(int set = 0; set < gfx_width; set++)
-				x_aspect_lookup[set] = set * gfx_x_aspect;
+				x_aspect_lookup[set] = set * gfx_y_aspect;  //x_aspect_lookup[set] = set * gfx_x_aspect;
 			for(int set = 0; set < gfx_height; set++)
 				y_aspect_lookup[set] = set * gfx_y_aspect;
 			}
+			
+			
+			
+			//gfx offset put at the end
+			gfx_xoffset = (gfx_width - viswidth * xmultiply) / 2;
+			gfx_yoffset = 0;//(gfx_height - visheight * ymultiply) / 2;
+			
 			break;
 
 		case 8:		// full screen scale
