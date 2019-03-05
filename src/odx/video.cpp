@@ -371,7 +371,7 @@ logerror("video_scale %d\n",video_scale);
 	/* setup xmultiply to handle SVGA driver's (possible) double width */
 	xmultiply = 1;
 	ymultiply = 1;
-/**
+
 	switch(video_scale)
 		{
 		case 2:		// halfscale
@@ -411,7 +411,7 @@ logerror("video_scale %d\n",video_scale);
 		case 6:		// aspect scale
 		case 7:		// aspect scale fast
 			{
-				*/
+				
 			if(visheight > gfx_height)
 				visheight = gfx_height;
 
@@ -419,22 +419,21 @@ logerror("video_scale %d\n",video_scale);
 			gfx_display_columns = viswidth; 
 
 			// Generate aspect scaling lookups.
-			//float gfx_x_aspect = (float)gfx_display_columns / (float)gfx_width;
+			//float gfx_x_aspect = (float)gfx_display_columns / (float)gfx_width; //fuck x.
 			float gfx_y_aspect = (float)gfx_display_lines / (float)gfx_height;
 
 			//recalculate viswidth
-			viswidth = (int)(viswidth * gfx_y_aspect);
+			viswidth = (int)(viswidth / gfx_y_aspect);
 			
 			for(int set = 0; set < gfx_width; set++)
 				x_aspect_lookup[set] = set * gfx_y_aspect;  //x_aspect_lookup[set] = set * gfx_x_aspect;
 			for(int set = 0; set < gfx_height; set++)
 				y_aspect_lookup[set] = set * gfx_y_aspect;
 						
-			//gfx offset put at the end
-			gfx_xoffset = (gfx_width - (viswidth *2) * xmultiply ) / 2;
-			//gfx_xoffset = 40;
+			//gfx offset put at the end after viswidth adjust
+			gfx_xoffset = (gfx_width - viswidth * xmultiply ) / 2;
 			gfx_yoffset = 0;//(gfx_height - visheight * ymultiply) / 2;
-			/**
+			
 			}
 			break;
 
@@ -473,7 +472,7 @@ logerror("video_scale %d\n",video_scale);
 				gfx_display_lines = gfx_height / ymultiply;
 			}
 		}
-*/
+
 	skiplinesmin = min_y;
 	skiplinesmax = visheight - gfx_display_lines + min_y;
 	skipcolumnsmin = min_x;

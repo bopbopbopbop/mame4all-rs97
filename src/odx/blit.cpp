@@ -95,7 +95,7 @@ int scan_width = 0;
 void init_blit_data()
 	{
 	
-	blit_dest = SCREEN16 + gfx_xoffset; //blit_dest = SCREEN16 + gfx_xoffset + (gfx_yoffset * gfx_width);
+	blit_dest = SCREEN16 + gfx_xoffset + (gfx_yoffset * gfx_width);
 	scan_width = gfx_width * 2;
 	}
 
@@ -528,6 +528,8 @@ INLINE void blitscreen_dirty0_palettized16_aspect_fast(struct osd_bitmap *bitmap
 	int source_line = 0;
 	//bool copy_line = gfx_display_columns < gfx_width ? true : false;
 
+	int adjusted_width = gfx_width - (gfx_xoffset * 2);
+	
 	for (y = 0; y < gfx_height; y++)
 	{
 		source_line = y_aspect_lookup[y];
@@ -542,7 +544,7 @@ INLINE void blitscreen_dirty0_palettized16_aspect_fast(struct osd_bitmap *bitmap
 		//}
 		//else
 		//{
-			for (x = 0; x < gfx_width; x++)
+			for (x = 0; x < adjusted_width; x++)
 			{
 				//address[x] = palette_16bit_lookup[bitmap_line[(int)(x*0.8f)]]; 
 				address[x] = palette_16bit_lookup[bitmap_line[x_aspect_lookup[x]]];
@@ -957,7 +959,7 @@ INLINE void blitscreen_dirty0_color16_aspect_fast(struct osd_bitmap *bitmap)
 	int source_line = 0;
 	//bool copy_line = gfx_display_columns < gfx_width ? true : false;
 
-	int adjusted_width = gfx_width - (gfx_xoffset*2);
+	int adjusted_width = gfx_width - (gfx_xoffset * 2);
 
 	for(y = 0; y < gfx_height; y ++)
 	{
