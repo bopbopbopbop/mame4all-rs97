@@ -94,7 +94,8 @@ int scan_width = 0;
 
 void init_blit_data()
 	{
-	blit_dest = SCREEN16 + gfx_xoffset + (gfx_yoffset * gfx_width);
+	
+	blit_dest = SCREEN16 + gfx_xoffset; //blit_dest = SCREEN16 + gfx_xoffset + (gfx_yoffset * gfx_width);
 	scan_width = gfx_width * 2;
 	}
 
@@ -525,25 +526,28 @@ INLINE void blitscreen_dirty0_palettized16_aspect_fast(struct osd_bitmap *bitmap
 	register unsigned short *address = blit_dest;
 
 	int source_line = 0;
-	bool copy_line = gfx_display_columns < gfx_width ? true : false;
+	//bool copy_line = gfx_display_columns < gfx_width ? true : false;
 
 	for (y = 0; y < gfx_height; y++)
 	{
 		source_line = y_aspect_lookup[y];
 		bitmap_line = lb + (source_line * width);
 
-		if(copy_line)
-			{
-			for (x = 0; x < columns; x++)
-				{
-				address[x] = palette_16bit_lookup[bitmap_line[x]];
-				}
-			}
-		else
-			{
+		//if(copy_line)
+		//{
+		//	for (x = 0; x < columns; x++)
+		//	{
+		//		address[x] = palette_16bit_lookup[bitmap_line[x]];
+		//	}
+		//}
+		//else
+		//{
 			for (x = 0; x < gfx_width; x++)
+			{
+				//address[x] = palette_16bit_lookup[bitmap_line[(int)(x*0.8f)]]; 
 				address[x] = palette_16bit_lookup[bitmap_line[x_aspect_lookup[x]]];
 			}
+		//}
 
 		address+=gfx_width;
 	}
@@ -942,19 +946,18 @@ INLINE void blitscreen_dirty0_color16_doublevertical(struct osd_bitmap *bitmap)
 
 INLINE void blitscreen_dirty0_color16_aspect_fast(struct osd_bitmap *bitmap)
 {
+	
 	int y,x;
 	int width=(bitmap->line[1] - bitmap->line[0])>>1;
-	int columns=gfx_display_columns<<1;
+	int columns=gfx_display_columns; //int columns=gfx_display_columns<<1;
 	unsigned short *lb = ((unsigned short*)(bitmap->line[skiplines])) + skipcolumns; //offset to start drawing at
-	unsigned short *bitmap_line;
+	unsigned short *bitmap_line; //address for line currently on
 	register unsigned short *address = blit_dest;
 
 	int source_line = 0;
 	//bool copy_line = gfx_display_columns < gfx_width ? true : false;
 
-	
-	int adjusted_width = gfx_width - (gfx_xoffset * 2);
-	
+	int adjusted_width = gfx_width - (gfx_xoffset*2);
 
 	for(y = 0; y < gfx_height; y ++)
 	{
@@ -967,10 +970,8 @@ INLINE void blitscreen_dirty0_color16_aspect_fast(struct osd_bitmap *bitmap)
 		//{
 			bitmap_line = lb + (source_line * (width));
 			
-
 			for(x = 0; x < adjusted_width; x++)
 			{
-				
 				address[x] = bitmap_line[x_aspect_lookup[x]];
 			}
 		//}
@@ -1247,7 +1248,9 @@ void blitscreen_dirty0_color16(struct osd_bitmap *bitmap)
 			break;
 
 		case 7:		// Scale aspect fast
+		
 			blitscreen_dirty0_color16_aspect_fast(bitmap);
+			
 			break;
 
 		case 8:		// Full screen
