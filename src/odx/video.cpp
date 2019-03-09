@@ -419,7 +419,7 @@ logerror("video_scale %d\n",video_scale);
 			gfx_display_columns = viswidth; 
 
 			// Generate aspect scaling lookups.
-			//float gfx_x_aspect = (float)gfx_display_columns / (float)gfx_width; //fuck x.
+			//float gfx_x_aspect = (float)gfx_display_columns / (float)gfx_width; //don't use x, one scale for both x and y.
 			float gfx_y_aspect = (float)gfx_display_lines / (float)gfx_height;
 
 			//recalculate viswidth

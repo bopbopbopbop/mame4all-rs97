@@ -116,20 +116,20 @@ int main (int argc, char **argv)
 
 	bool in_frontend = true;
 	while(in_frontend)
-		{
+	{
 		if(!do_frontend())
-			{
+		{
 			printf("Frontend closing down.\n");
 			in_frontend = false;
-			}
+		}
 		else
-			{
+		{
 			char **margv = (char **)&mame_args;
 
 			set_mame_args(margc, margv);
 
 			for(i = 1; i < margc;i++)
-				{
+			{
 				if (strcasecmp(margv[i],"-fame") == 0)
 					use_fame=1;
 				if (strcasecmp(margv[i],"-unscaled") == 0)
@@ -161,12 +161,12 @@ int main (int argc, char **argv)
 				if ((strcasecmp(margv[i],"-clock") == 0) && (i<margc-1))
 					odx_clock=atoi(margv[i+1]);
 				if (strcasecmp(margv[i],"-playback") == 0)
-					{
+				{
 					i++;
 					if (i < margc)  /* point to inp file name */
 						playbackname = margv[i];
-					}
 				}
+			}
 				
 			
 
@@ -176,97 +176,104 @@ int main (int argc, char **argv)
 				init_inpdir(); /* Init input directory for opening .inp for playback */
 
 				if (playbackname != NULL)
+				{
 					options.playback = osd_fopen(playbackname,0,OSD_FILETYPE_INPUTLOG,0);
+				}
 
 				/* check for game name embedded in .inp header */
 				if (options.playback)
-					{
-				INP_HEADER inp_header;
-
-				/* read playback header */
-				osd_fread(options.playback, &inp_header, sizeof(INP_HEADER));
-
-				if (!isalnum(inp_header.name[0])) /* If first byte is not alpha-numeric */
-				    osd_fseek(options.playback, 0, SEEK_SET); /* old .inp file - no header */
-				else
 				{
-				    for (i = 0; (drivers[i] != 0); i++) /* find game and play it */
-						{
-					if (strcmp(drivers[i]->name, inp_header.name) == 0)
+					INP_HEADER inp_header;
+
+					/* read playback header */
+					osd_fread(options.playback, &inp_header, sizeof(INP_HEADER));
+
+					if (!isalnum(inp_header.name[0])) /* If first byte is not alpha-numeric */
+						osd_fseek(options.playback, 0, SEEK_SET); /* old .inp file - no header */
+					else
 					{
-					    game_index = i;
-					    printf("Playing back previously recorded game %s (%s) [press return]\n",
-						drivers[game_index]->name,drivers[game_index]->description);
-					    getchar();
-					    break;
+						for (i = 0; (drivers[i] != 0); i++) /* find game and play it */
+						{
+							if (strcmp(drivers[i]->name, inp_header.name) == 0)
+							{
+								game_index = i;
+								printf("Playing back previously recorded game %s (%s) [press return]\n",
+								drivers[game_index]->name,drivers[game_index]->description);
+								getchar();
+								break;
+							}
+						}
 					}
-				    }
-				}
 			    }
 
 				/* If not playing back a new .inp file */
 			    if (game_index == -1)
 			    {
-				/* take the first commandline argument without "-" as the game name */
-				for (j = 1; j < margc; j++)
-				{
-				    if (margv[j][0] != '-') break;
-				}
-				/* do we have a driver for this? */
-				{
+					/* take the first commandline argument without "-" as the game name */
+					for (j = 1; j < margc; j++)
+					{
+						if (margv[j][0] != '-') break;
+					}
+					/* do we have a driver for this? */
+				
 				    for (i = 0; drivers[i] && (game_index == -1); i++)
 				    {
-					if (strcasecmp(margv[j],drivers[i]->name) == 0)
-					{
-					    game_index = i;
-					    break;
-					}
+						if (strcasecmp(margv[j],drivers[i]->name) == 0)
+						{
+							game_index = i;
+							break;
+						}
 				    }
 
 				    /* educated guess on what the user wants to play */
 				    if (game_index == -1)
 				    {
-					int fuzz = 9999; /* best fuzz factor so far */
+						int fuzz = 9999; /* best fuzz factor so far */
 
-					for (i = 0; (drivers[i] != 0); i++)
-					{
-					    int tmp;
-					    tmp = fuzzycmp(margv[j], drivers[i]->description);
-					    /* continue if the fuzz index is worse */
-					    if (tmp > fuzz)
-						continue;
-
-					    /* on equal fuzz index, we prefer working, original games */
-					    if (tmp == fuzz)
-					    {
-									/* game is a clone */
-									if (drivers[i]->clone_of != 0
-											&& !(drivers[i]->clone_of->flags & NOT_A_DRIVER))
+						for (i = 0; (drivers[i] != 0); i++)
 						{
-						    /* if the game we already found works, why bother. */
-						    /* and broken clones aren't very helpful either */
-						    if ((!drivers[game_index]->flags & GAME_NOT_WORKING) ||
-							(drivers[i]->flags & GAME_NOT_WORKING))
+							int tmp;
+							tmp = fuzzycmp(margv[j], drivers[i]->description);
+							/* continue if the fuzz index is worse */
+							if (tmp > fuzz)
 							continue;
+
+							/* on equal fuzz index, we prefer working, original games */
+							if (tmp == fuzz)
+							{
+										/* game is a clone */
+								if (drivers[i]->clone_of != 0 && !(drivers[i]->clone_of->flags & NOT_A_DRIVER))
+								{
+									/* if the game we already found works, why bother. */
+									/* and broken clones aren't very helpful either */
+									if ((!drivers[game_index]->flags & GAME_NOT_WORKING) || (drivers[i]->flags & GAME_NOT_WORKING))
+									{
+										continue;
+									}
+								}
+								else
+								{
+									continue;
+								}
+							}
+
+							/* we found a better match */
+							game_index = i;
+							fuzz = tmp;
 						}
-						else continue;
-					    }
 
-					    /* we found a better match */
-					    game_index = i;
-					    fuzz = tmp;
-					}
-
-					if (game_index != -1)
-					    printf("fuzzy name compare, running %s\n",drivers[game_index]->name);
+						if (game_index != -1)
+						{
+							printf("fuzzy name compare, running %s\n",drivers[game_index]->name);
+						}
 				    }
-				}
+				
 
-				if (game_index == -1)
-				{
-				    printf("Game \"%s\" not supported\n", margv[j]);
-				    return 1;
-				}
+					if (game_index == -1)
+					{
+						printf("Game \"%s\" not supported\n", margv[j]);
+						return 1;
+					}
 			    }
 
 				/* parse generic (os-independent) options */
@@ -394,8 +401,8 @@ int main (int argc, char **argv)
 				}
 
 			game_index = -1;
-			}
 		}
+	}
 
 	logerror("Calling odx_deinit()...\n");
    	odx_deinit();

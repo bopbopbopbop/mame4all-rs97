@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <dirent.h> 
 
+
 #include "minimal.h"
 
 #include "odx_frontend_list.h"
@@ -13,12 +14,12 @@
 #define Y_INCREMENT 12
 
 #ifdef RS07
-#define VERSION_NUMBER "RS-07 V0.4.2"
+#define VERSION_NUMBER "RS-07 V0.4.4"
 
 #endif
 
 #ifdef RS97
-#define VERSION_NUMBER "RFW-97 V0.4.2"
+#define VERSION_NUMBER "RFW-97 V0.4.4"
 #endif
 
 
@@ -57,6 +58,12 @@
 static unsigned char splash_bmp[BMP_SIZE];
 static unsigned char menu_bmp[BMP_SIZE];
 
+#ifdef logging
+#define FRONTEND_LOG "frontend.log"
+static FILE *errorlog;
+#endif
+
+
 int game_num_avail=0;
 static int last_game_selected=0;
 char playemu[16] = "mame\0";
@@ -83,6 +90,19 @@ bool want_exit = false, first_run = true;
 char romdir[512];
 
 signed int get_romdir(char *result) ;
+
+#ifdef logging
+static void logerror(const char *text,...)
+{
+	if (errorlog)
+	{
+		va_list arg;
+		va_start(arg,text);
+		vfprintf(errorlog,text,arg);
+		va_end(arg);
+	}
+}
+#endif
 
 static void blit_bmp_8bpp(unsigned char *out, unsigned char *in) 
 {
@@ -111,6 +131,10 @@ static void odx_intro_screen(void) {
 	sprintf(name,"skins/splash_RS97.bmp");
 	#endif
 	
+	#ifdef logging
+	//added. was wa, but we want a new file every time
+	errorlog = fopen(FRONTEND_LOG,"w");
+	#endif
 	
 	f=fopen(name,"rb");
 	if (f) {
@@ -367,14 +391,11 @@ static int show_options(char *game)
 			case 0: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Unscaled"); break;
 			case 1: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Aspect - Downscale"); break;
 			case 2: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Aspect - Upscale"); break;
-			case 3: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Scale Fast"); break;
-			case 4: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Full Screen"); break;
-			case 5: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Unscaled"); break;
-			case 6: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Scale Horiz"); break;
-			case 7: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Best"); break;
-			case 8: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Fast"); break;
-			case 9: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Fullscreen"); break;
-			case 10: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Double Vertical"); break;
+			case 3: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Full Screen"); break;
+			case 4: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Unscaled"); break;
+			case 5: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Scale Aspect - Downscale  "); break;
+			case 6: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Scale Aspect - Upscale"); break;
+			case 7: odx_gamelist_text_out_fmt(x_Pos,y_Pos,"Video Aspect   Rotate Full Screen"); break;
 		}
 		
 		/* (2) Video Sync */
@@ -482,14 +503,14 @@ static int show_options(char *game)
 				if(ExKey & OD_RIGHT)
 				{
 					odx_video_aspect++;
-					if (odx_video_aspect>10)
+					if (odx_video_aspect>7)
 						odx_video_aspect=0;
 				}
 				else
 				{
 					odx_video_aspect--;
 					if (odx_video_aspect<0)
-						odx_video_aspect=10;
+						odx_video_aspect=7;
 				}
 				break;
 			case 2:
@@ -621,7 +642,7 @@ void odx_load_config(void) {
 	f=fopen(curCfg,"r");
 	if (f) {
 		fscanf(f,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%[^\n]s",&odx_freq,&odx_video_depth,&odx_video_aspect,&odx_video_sync,
-		&odx_frameskip,&odx_sound,&odx_clock_cpu,&odx_clock_sound,&odx_cpu_cores,&odx_ramtweaks,&last_game_selected,&odx_cheat,romdir);
+		&odx_frameskip,&odx_sound,&odx_clock_cpu,&odx_clock_sound,&odx_cpu_cores,&odx_ramtweaks,&last_game_selected,&odx_cheat,NULL);
 		fclose(f);
 	}
 	
@@ -634,11 +655,37 @@ void odx_load_config(void) {
 	filesave = fopen(text, "r");
 	if (filesave)
 	{
-		fscanf(filesave, romdir);
+		fscanf(filesave, "%s",romdir);
 		fclose(filesave);
 	}
 	
 	//end of added
+	
+	#ifdef logging
+	//snprintf(text, sizeof(text), "%s, text);
+	char errormessage[512];
+	snprintf(errormessage, sizeof(errormessage), "save location file is %s \n", text);	
+	logerror(errormessage);
+	
+	snprintf(text, sizeof(text), "%s/cfg/romsave.txt", mamedir); 
+	
+	filesave = fopen(text, "r");
+	if (filesave)
+	{
+		fscanf(filesave, "%s",text);
+		fclose(filesave);
+	}
+	
+	snprintf(errormessage, sizeof(errormessage), "save location in file is %s \n", text);	
+	logerror(errormessage);
+	
+	
+	snprintf(errormessage, sizeof(errormessage), "actual save location is %s \n", romdir);	
+	logerror(errormessage);
+	
+	#endif
+	
+	
 }
 
 void odx_save_config(void) {
@@ -803,55 +850,39 @@ void execute_game (char *playemu, char *playgame)
 			break;
 
 		case 3:
-			{
-			mame_args[margc]="-aspect"; margc++; 
+			{ //fullscreen
+			mame_args[margc]="-fullscreen"; margc++; //-aspect
 			}
 			break;
 		
 		case 4:
-			{ //fullscreen
-			mame_args[margc]="-fullscreen"; margc++;
+			{//rotate normal
+			mame_args[margc]="-unscaled"; margc++;
 			}
 			break;
 		case 5:
-			{ //rotate normal
-			mame_args[margc]="-unscaled"; margc++;
+			{ // rotate Scale aspect.
+			mame_args[margc]="-bestscale"; margc++;
 			}		
 			break;
 		case 6:
-			{
-			// rotate Scale aspect.
-			mame_args[margc]="-bestscale"; margc++; //was -aspect
+			{// rotate Scale aspect fast.
+			
+			mame_args[margc]="-fastaspect"; margc++; //was -aspect
 			}
 			break;
 		case 7:
-			{
-			// rotate Scale aspect fast.
-			mame_args[margc]="-fastaspect"; margc++;
-			}
-			break;
-		case 8:
-			{
-			mame_args[margc]="-aspect"; margc++; 
-			}
-			break;
-		case 9:
 			{ //rotate fullscreen
-			mame_args[margc]="-scandouble"; margc++;
+			
+			mame_args[margc]="-fullscreen"; margc++;
 			}
 			break;
-
-		case 10:
-			{
-			// Double vertical.
-			mame_args[margc]="-double"; margc++;
-			}
-			break;
+		
 		}
 
 	mame_args[margc]="-nodirty"; margc++;
 
-	if ((odx_video_aspect>=5) && (odx_video_aspect<=9))
+	if ((odx_video_aspect>=4) && (odx_video_aspect<=7))
 	{
 		mame_args[margc]="-rotatecontrols"; margc++;
 		mame_args[margc]="-ror"; margc++;
@@ -1176,7 +1207,7 @@ signed int get_romdir(char *result)
 void gethomedir() {
 	char text[512];
 	
-	FILE *filesave, *ftest;
+	FILE *fileread, *ftest;
 
 	snprintf(mamedir, sizeof(mamedir), "%s/.mame4all", getenv("HOME"));
 	mkdir(mamedir,0755); // create $HOME/.program if it doesn't exist
@@ -1194,14 +1225,21 @@ void gethomedir() {
 	mkdir(text,0755); 
 
 	snprintf(text, sizeof(text), "%s/cfg/romsave.txt",mamedir); 
+	
+	#ifdef logging
+	//logs
+	logerror(text);
+	#endif
 
-	filesave = fopen(text, "r");
-	if (filesave)
+	
+	fileread = fopen(text, "r");
+	if (fileread)
 	{
-		fscanf(filesave, romdir);
-		fclose(filesave);
+		fscanf(fileread, "%s",romdir);
+		fclose(fileread);
 	}
 		
+		/**
 	snprintf(text, sizeof(text), "%s/test.tmp",romdir); 
 	ftest = fopen(text, "w+");
 	if (ftest == NULL)
@@ -1215,6 +1253,7 @@ void gethomedir() {
 		fclose(ftest);
 	
 	}
+	*/
 }
 
 int do_frontend ()
@@ -1241,6 +1280,14 @@ int do_frontend ()
 		/* Show intro screen */
 		odx_intro_screen();
 
+		
+		#ifdef logging
+		char errormessage[14];
+		snprintf(errormessage,"at firstrun \n",errormessage);
+		logerror(errormessage);	
+		#endif
+		
+		
 		/* Read default configuration */
 		odx_load_config();
 
