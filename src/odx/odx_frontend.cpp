@@ -12,7 +12,10 @@
 #include "odx_frontend_list.h"
 
 #define Y_INCREMENT 12
+#ifdef GAMETA
+#define VERSION_NUMBER "GAMETA V0.4.4"
 
+#endif
 #ifdef RS07
 #define VERSION_NUMBER "RS-07 V0.4.4"
 
@@ -36,6 +39,14 @@
 
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240 
+#define BMP_SIZE ((SCREEN_HEIGHT*SCREEN_WIDTH)+(256*4)+54)
+#define Y_BOTTOM_LINE (SCREEN_HEIGHT-Y_INCREMENT)
+#endif
+
+#ifdef GAMETA
+
+#define SCREEN_WIDTH 480
+#define SCREEN_HEIGHT 320 
 #define BMP_SIZE ((SCREEN_HEIGHT*SCREEN_WIDTH)+(256*4)+54)
 #define Y_BOTTOM_LINE (SCREEN_HEIGHT-Y_INCREMENT)
 #endif
@@ -123,7 +134,9 @@ static void odx_intro_screen(void) {
 	char name[256];
 	FILE *f;
 	
-	
+	#ifdef GAMETA
+	sprintf(name,"skins/splash_GAMETA.bmp");
+	#endif
 	#ifdef RS07
 	sprintf(name,"skins/splash_RS07.bmp");
 	#endif
@@ -152,7 +165,9 @@ static void odx_intro_screen(void) {
 	#ifdef RS97
 	odx_gamelist_text_out(ODX_SCREEN_WIDTH - 110,Y_BOTTOM_LINE - Y_INCREMENT, "RFW-97 - RANDOMIZE");
 	#endif
-	
+	#ifdef GAMETA
+	odx_gamelist_text_out(ODX_SCREEN_WIDTH - 110,Y_BOTTOM_LINE - Y_INCREMENT, "GAMETA - RANDOMIZE");
+	#endif
 
 	odx_video_flip();
 	odx_joystick_press(JOY_NUM);
@@ -163,7 +178,9 @@ static void odx_intro_screen(void) {
 	#ifdef RS97
 	sprintf(name,"skins/menu_RS97.bmp");
 	#endif
-	
+	#ifdef GAMETA
+	sprintf(name,"skins/menu_GAMETA.bmp");
+	#endif
 	f=fopen(name,"rb");
 	if (f) {
 		fread(menu_bmp,1,BMP_SIZE,f);

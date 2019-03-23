@@ -2,8 +2,9 @@
 #OSTYPE=msys
 #OSTYPE=oda320
 OSTYPE=gcw0
-SUBTYPE=RS07
+#SUBTYPE=RS07
 #SUBTYPE=RS97
+SUBTYPE=GAMETA
 
 ifeq ($(TARGET),)
 TARGET = mame
@@ -63,7 +64,12 @@ ifeq "$(OSTYPE)" "gcw0"
 ifeq "$(SUBTYPE)" "RS97"
 DEFS = -D__ODX__ -DLSB_FIRST -DALIGN_INTS -DALIGN_SHORTS -DINLINE="static inline" -Dasm="__asm__ __volatile__" -DMAME_UNDERCLOCK -DMAME_FASTSOUND -DENABLE_AUTOFIRE -DBIGCASE -DRS97
 else
+ifeq "$(SUBTYPE)" "GAMETA"
+DEFS = -D__ODX__ -DLSB_FIRST -DALIGN_INTS -DALIGN_SHORTS -DINLINE="static inline" -Dasm="__asm__ __volatile__" -DMAME_UNDERCLOCK -DMAME_FASTSOUND -DENABLE_AUTOFIRE -DBIGCASE -DGAMETA
+else
+#RS07
 DEFS = -D__ODX__ -DLSB_FIRST -DALIGN_INTS -DALIGN_SHORTS -DINLINE="static inline" -Dasm="__asm__ __volatile__" -DMAME_UNDERCLOCK -DMAME_FASTSOUND -DENABLE_AUTOFIRE -DBIGCASE -DRS07
+endif
 endif
 
 W_OPTS = -Wall -Wno-write-strings -Wno-sign-compare -Wno-narrowing
